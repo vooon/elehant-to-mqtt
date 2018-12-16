@@ -1,3 +1,5 @@
 .pio
 .pioenvs
 .piolibdeps
+
+*.swp
