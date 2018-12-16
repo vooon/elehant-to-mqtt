@@ -12,21 +12,17 @@
 #include <BLEScan.h>
 #include <BLEAdvertisedDevice.h>
 
-#include <base64.h>
-
 BLEScan *pScan;
 
-template<typename T>
-static inline std::string to_hex(T &str)
+static inline std::string to_hex(const std::string &str)
 {
 	std::string ret;
 
 	ret.resize(str.length() * 2);
 	auto *p = &ret.front();
 
-	for (char v : str) {
-		*p++ = ((v >> 4) & 0xff) + '0';
-		*p++ = (v        & 0xff) + '0';
+	for (auto v : str) {
+		p += ::sprintf(p, "%02X", v);
 	}
 
 	return ret;
@@ -46,7 +42,7 @@ class MyAdvertisedDeviceCallbacls:
 
 		auto jdev = root.createNestedObject("dev");
 		jdev["bdaddr"] = dev.getAddress().toString();
-		jdev["addr_type"] = addr_type;
+		jdev["addr_type"] = int(addr_type);
 
 		//[[[cog:
 		// for key, getter in [
@@ -105,7 +101,7 @@ void setup()
 	Serial.begin(115200);
 	log_i("Setup");
 
-	BLEDevice::init("");
+	BLEDevice::init("svd-15-mqtt");
 	pScan = BLEDevice::getScan();
 	pScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacls(), true);
 	pScan->setActiveScan(false);
@@ -116,10 +112,8 @@ void setup()
 void loop()
 {
 	log_i("Scanning...");
-	BLEScanResults devices = pScan->start(10, true);
-
-	//log_d("Scan result:");
-	devices.dump();
+	// blocking
+	pScan->start(3600, true);
 
 	//pScan->clearResults();
 }
