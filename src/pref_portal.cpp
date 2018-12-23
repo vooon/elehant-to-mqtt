@@ -7,7 +7,6 @@
 #include <DNSServer.h>
 #include <SPIFFS.h>
 
-#if 0
 
 constexpr auto P_HTTP = 80;
 constexpr auto P_DNS = 53;
@@ -115,7 +114,7 @@ static void handle_config_json_post(AsyncWebServerRequest *req)
 	String error_msg;
 	auto body_p = req->getParam(0);
 	if (body_p == nullptr) {
-		Log.trace("body_p null\n");
+		log_d("body_p null");
 		return;
 	}
 
@@ -126,7 +125,7 @@ static void handle_config_json_post(AsyncWebServerRequest *req)
 	Serial.println("---");
 
 	DynamicJsonDocument jdoc(512);
-
+	JsonObject js_root;
 
 	auto ret = deserializeJson(jdoc, body);
 	if (ret != DeserializationError::Ok) {
@@ -134,8 +133,7 @@ static void handle_config_json_post(AsyncWebServerRequest *req)
 		goto error_out;
 	}
 
-	auto js_root = jdoc.as<JsonObject>();
-
+	js_root = jdoc.as<JsonObject>();
 	if (js_root["type"] != cfg::pref::JS_TYPE_HEADER) {
 		error_msg = "No type header";
 		goto error_out;
@@ -221,5 +219,3 @@ void pref_portal::run()
 		delay(1);
 	}
 }
-
-#endif

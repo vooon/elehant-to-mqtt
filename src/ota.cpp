@@ -3,10 +3,9 @@
 #include "config.h"
 #include "mqtt_commander.h"
 
-//#define DEBUG_ESP_HTTP_UPDATE		1
-//#define DEBUG_ESP_PORT		Serial
-
 using namespace ota;
+
+#if 0	// disable - stable core don't have HTTPUpdate module
 
 #include <HTTPUpdate.h>
 
@@ -59,3 +58,16 @@ void ota::start_update(String url)
 	m_ota_url = url;
 	xTaskCreate(updater_thd, "ota", 10240, NULL, 2, NULL);
 }
+
+#else	// OTA is disabled
+
+String ota::last_error()
+{
+	return "";
+}
+
+void ota::start_update(String url)
+{
+}
+
+#endif

@@ -266,7 +266,7 @@ void mqtt::init()
 			pdTRUE, NULL, tmr_report_stats);
 }
 
-void mqtt::on_wifi_state_change()
+void mqtt::on_wifi_state_change(bool connected_)
 {
 	auto connected = WiFi.isConnected();
 

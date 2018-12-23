@@ -1,12 +1,19 @@
 
-//#include "config.h"
+#include "soft_wdt.h"
+#include <Arduino.h>
+
+extern "C" {
+	#include <freertos/FreeRTOS.h>
+	#include <freertos/timers.h>
+}
+
 
 static TimerHandle_t m_timeout_tmr;
 
 
 static void tmr_timeout(TimerHandle_t timer)
 {
-	log_f("SoftWDT: timed out!");
+	log_e("SoftWDT: timed out!");
 	die();
 }
 
