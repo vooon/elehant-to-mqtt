@@ -17,7 +17,8 @@ static TimerHandle_t m_uptime_tmr;
 
 static void tmr_uptime(TimerHandle_t timer)
 {
-	uint32_t now = millis();
+	//uint32_t now = millis();
+	uint32_t now = esp_timer_get_time() / 1000;
 
 	m_uptime += (now - m_last_millis);
 	m_last_millis = now;

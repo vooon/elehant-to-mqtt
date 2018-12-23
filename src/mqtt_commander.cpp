@@ -52,12 +52,13 @@ static void pub_device_info()
 	DynamicJsonDocument jdoc(256);
 	JsonObject root = jdoc.to<JsonObject>();
 
-	root["now"] = millis();
-	root["ts"] = ntp::g_ntp.getEpochTime();
+	//root["now"] = millis();
+	//root["ts"] = ntp::g_ntp.getEpochTime();
+	root["now"] = esp_timer_get_time() / 1000;
 
 	auto fw = root.createNestedObject("fw");
 	fw["version"] = cfg::msgs::FW_VERSION;
-	//fw["md5"] = ESP.getSketchMD5();	// XXX only present in fresh platform, with HTTPUpdate
+	fw["md5"] = ESP.getSketchMD5();	// XXX only present in fresh platform, with HTTPUpdate
 	fw["sdk-version"] = ESP.getSdkVersion();
 
 	auto hw = root.createNestedObject("hw");
@@ -76,7 +77,8 @@ static void pub_stats()
 	auto t_f = temprature_sens_read();
 	float t_c = (t_f - 32.0f) / 1.8f;
 
-	root["now"] = millis();
+	//root["now"] = millis();
+	root["now"] = esp_timer_get_time() / 1000;
 	root["ts"] = ntp::g_ntp.getEpochTime();
 	root["uptime"] = (long unsigned int) uptime::uptime_ms() / 1000;
 	root["wifi-rssi"] = WiFi.RSSI();

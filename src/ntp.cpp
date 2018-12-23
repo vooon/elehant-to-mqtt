@@ -13,6 +13,8 @@ static void ntp_thd(void *arg)
 {
 	log_i("NTP thread started.");
 
+	// XXX FIXME
+
 	//configTime(0, 0, cfg::time::NTP_POOL);	// setup local time to UTC
 	//ntp::g_ntp.begin();
 
@@ -27,7 +29,7 @@ static void ntp_thd(void *arg)
 
 void ntp::init()
 {
-	log_i("Enabling NTP...");
+	//log_i("Enabling NTP...");
 
 	//xTaskCreate(ntp_thd, "ntp", 4096, NULL, 4, NULL);
 }

@@ -70,8 +70,10 @@ class MyAdvertisedDeviceCallbacls:
 	{
 		log_d("Got advertisment");
 
-		auto now = millis();
-		auto ts = ntp::g_ntp.getEpochTime();
+		//auto now = millis();
+		//auto ts = ntp::g_ntp.getEpochTime();
+		uint32_t now = esp_timer_get_time() / 1000;
+		auto ts = 0;
 
 		if (1 /* TODO add flag */)
 			send_raw(now, ts, dev);
