@@ -2,24 +2,18 @@
  * Config module
  *
  *
- * @author Vladimir Ermakov 2017,2018
+ * @author Vladimir Ermakov 2018
  */
 
 #pragma once
 
-#include "common.h"
+#include <common.h>
 
 namespace cfg {
 namespace io {
-#if defined(BOARD_LEDMATRIX_V10)
-	constexpr auto MLED_MOSI = 23;
-	constexpr auto MLED_CLK = 18;
-	constexpr auto MLED_CS = 5;
-	constexpr auto CFG_CLEAR = 21;
-#define HAS_MAX7219_SPI	1
-#else
-#error Unsupported board!
-#endif
+	constexpr auto CFG_CLEAR = 36;
+	constexpr auto LED = 25;
+#define BOARD_HAS_LED	1
 };
 
 namespace wl {
@@ -36,19 +30,19 @@ namespace wl {
 namespace mqtt {
 	constexpr auto D_BROKER = "domus1";
 	constexpr auto D_PORT = 1883;
-	constexpr auto D_USER = "";
+	constexpr auto D_USER = "DVES_USER";
 
-	constexpr auto ID_PREFIX = "ESP_";
+	constexpr auto ID_PREFIX = "elehant";
 	constexpr auto KEEPALIVE = 30;
 
-	extern String id;
+	extern String client_id;
 	extern String broker;
 	extern uint16_t port;
 	extern String user;
 	extern String password;
 };
 
-namespace rtc {
+namespace time {
 	constexpr auto NTP_POOL = "ru.pool.ntp.org";
 };
 
@@ -66,60 +60,41 @@ namespace timer {
 };
 
 namespace topic {
-	constexpr auto SUB_COMMAND_PREFIX = "/command/";
-	constexpr auto SUB_SERVER_ALIVE = "/server-alive";
-	constexpr auto SUB_DEV_CONFIG = "/config/";
-	constexpr auto SUB_TEXT_TO_SHOW = "/text-to-show/";
-	constexpr auto PUB_ALIVE_PREFIX = "/alive/";
-	constexpr auto PUB_ERROR_PREFIX = "/error/";
-	constexpr auto PUB_SUCCESS_PREFIX = "/success/";
-	constexpr auto PUB_WILL_PREFIX = "/conn-status/";
-	constexpr auto PUB_STATISTICS = "/statistics/";
-	constexpr auto PUB_DEV_INFO = "/dev-info/";
+	enum class Type {
+		cmnd = 0,
+		stat = 1,
+		tele = 3,
+	};
+
+	inline String to_string(Type t) {
+		switch(t) {
+			case Type::cmnd:	return "cmnd";
+			case Type::stat:	return "stat";
+			case Type::tele:	return "tele";
+			default:		return "type-error";
+		}
+	}
 
 	template<typename T>
-	inline String make(T prefix) {
-		return prefix + mqtt::id;
+	inline String make(Type type, T topic) {
+		return to_string(type) + "/" + mqtt::client_id + "/" + String(topic).toUpperCase();
 	}
 };
 
 namespace msgs {
-	constexpr auto WILL_MSG = "OFFLINE";
-	constexpr auto WILL_OK_MSG = "ONLINE";
-
-	constexpr auto SUCCESS_OK = "FOOD_NO_ERROR";
-	constexpr auto SUCCESS_CMD_RECV = "COMMAND_RECEIVED";
-	constexpr auto ERROR_CMD_UNK = "COMMAND_UNKNOWN";
-	constexpr auto ERROR_INVAL = "EINVAL";
-	constexpr auto ERROR_INVAL_JSON = "INVAL_JSON";
-
-	constexpr auto CMD_OTA = "ota";
-	constexpr auto CMD_REBOOT = "reboot";
-	constexpr auto CMD_RESET_SETTINGS = "reset_settings";
+	constexpr auto LWT_OFFLINE = "Offline";
+	constexpr auto LWT_ONLINE = "Online";
 
 	extern const char *FW_VERSION;
-
-#if defined(BOARD_LEDMATRIX_V10)
-	constexpr auto HW_VERSION = "ledmatrix-v1.0";
-#endif
-
-	constexpr auto OTA_FAILED = "OTA_FAILED";
-	constexpr auto OTA_NO_UPDATES= "OTA_NO_UPDATES";
-	constexpr auto OTA_STARTED = "OTA_STARTED";
-
-	constexpr auto RST_OK = "REBOOTING";
-	constexpr auto RST_CFG = "CFG_RESET";
+	constexpr auto HW_VERSION = "elehant";
 };
 
 namespace ota {
-#if defined(BOARD_LEDMATRIX_V10)
-	constexpr auto URL = "http://esp.vehq.ru:8092/bin/ledmatrix-v10/fw.bin";
-#endif
+	constexpr auto URL = "http://esp.vehq.ru:8092/bin/elehant/fw.bin";
 };
 
 
 void init();
-void commit();
 String get_hostname();
 void reset_and_die();
 
