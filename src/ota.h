@@ -1,7 +1,7 @@
 /**
  * OTA manager
  *
- * @author Vladimir Ermakov 2017
+ * @author Vladimir Ermakov 2017,2018
  */
 
 #pragma once
@@ -17,7 +17,6 @@ enum Result : int {
 	OK = 2,
 };
 
-Result update();
 String last_error();
 void start_update(String url = cfg::ota::URL);
 

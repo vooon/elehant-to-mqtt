@@ -8,76 +8,48 @@
 
 using namespace ota;
 
-#ifdef ESP8266
-#include <Ticker.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266httpUpdate.h>
-
-static volatile int m_wdt_cnt;
-static Ticker m_long_wdt;
-#else
-#include <ESP32httpUpdate.h>
-#endif
+#include <HTTPUpdate.h>
 
 static String m_ota_url = "";
+static WiFiClient m_client;
 
 
 Result ota::update()
 {
-#ifdef ESP8266
-	ESP.wdtFeed();
-	//ESP.wdtDisable();
+	HTTPUpdateResult res;
 
-	m_wdt_cnt = 120;	// Give 2min for OTA
-	m_long_wdt.attach_ms(1000, []() {
-		if (--m_wdt_cnt > 0)
-			ESP.wdtFeed();
-		});
-#else
-	soft_wdt::feed();	// Give 1min
-#endif
-
-	int res;
 	auto current_version =
 		String("fw:") + cfg::msgs::FW_VERSION +
 		" hw:" + cfg::msgs::HW_VERSION +
-		" id:" + cfg::mqtt::id;
+		" client_id:" + cfg::mqtt::client_id;
 
-#ifdef ESP8266
-	current_version += " md5:" + ESP.getSketchMD5();
+	log_i("Starting OTA: %s", m_ota_url.c_str());
+
+	//soft_wdt::feed();	// Give 1min
+
+	httpUpdate.rebootOnUpdate(false);
+#ifdef BOARD_HAS_LED
+	httpUpdate.setLedPin(cfg::io::LED, LOW);
 #endif
 
-	Log.notice(F("Start OTA\n"));
-	ESPhttpUpdate.rebootOnUpdate(false);
-	if (strlen(cfg::ota::FINGERPRINT) != 0) {
-		res = ESPhttpUpdate.update(m_ota_url, current_version, cfg::ota::FINGERPRINT);
-	}
-	else {
-		res = ESPhttpUpdate.update(m_ota_url, current_version);
-	}
+	res = httpUpdate.update(m_client, m_ota_url, current_version);
 
 	return static_cast<Result>(res);
 }
 
 String ota::last_error()
 {
-	return ESPhttpUpdate.getLastErrorString();
+	return httpUpdate.getLastErrorString();
 }
 
-#ifdef ESP8266
-void ota::start_update()
-{
-	mqtt::ota_report(update());
-}
-
-#else
 static void updater_thd(void *arg)
 {
-	Log.notice(F("OTA thread started.\n"));
+	log_i("OTA thread started.");
 
 	auto result = update();
-	Log.notice(F("OTA result: %d\n"), result);
-	mqtt::ota_report(result);
+
+	log_i("OTA result: %d", result);
+	//mqtt::ota_report(result);
 
 	vTaskDelete(NULL);
 }
@@ -87,4 +59,3 @@ void ota::start_update(String url)
 	m_ota_url = url;
 	xTaskCreate(updater_thd, "ota", 10240, NULL, 2, NULL);
 }
-#endif
