@@ -20,7 +20,7 @@ R"(
 </header>
 <body>
 	<h1>Upload config.json</h1>
-	<form method="post" action="/config.json" enctype="application/x-www-form-urlencoded">
+	<form method="post" action="/config.json" enctype="multipart/form-data">
 		<input type="file" name="file">
 		<input type="submit" value="Submit">
 	</form>
@@ -64,7 +64,7 @@ static bool captive_portal(AsyncWebServerRequest *req)
 
 	snprintf(url, sizeof(url) - 1, "http://%d.%d.%d.%d/", ip[0], ip[1], ip[2], ip[3]);
 
-	log_i("PREF: request redirect to captive portal\n");
+	log_i("PREF: request redirect to captive portal: %s\n", url);
 	req->redirect(url);
 
 	return true;
@@ -112,22 +112,33 @@ static void handle_config_json_post(AsyncWebServerRequest *req)
 	log_d("PREF: handle_config_json_post()");
 
 	String error_msg;
-	auto body_p = req->getParam(0);
-	if (body_p == nullptr) {
-		log_d("body_p null");
-		return;
-	}
-
-	auto body = body_p->value();
-
-	log_d("POST Body: %s\n---", body_p->name().c_str());
-	Serial.println(body);
-	Serial.println("---");
-
+	AsyncWebParameter *file_p = nullptr;
+	DeserializationError ret;
 	DynamicJsonDocument jdoc(512);
 	JsonObject js_root;
 
-	auto ret = deserializeJson(jdoc, body);
+	if (req->hasParam("file", true, true)) {
+		// have form with file
+		file_p = req->getParam("file", true, true);
+	}
+	else {
+		file_p = req->getParam(0);
+	}
+
+	if (file_p == nullptr) {
+		log_e("file_p null");
+		return;
+	}
+
+	if (file_p->isFile()) {
+		File file = SPIFFS.open(cfg::pref::CONFIG_JSON_NEW, "r");
+		ret = deserializeJson(jdoc, file);
+		file.close();
+	}
+	else {
+		ret = deserializeJson(jdoc, file_p->value());
+	}
+
 	if (ret != DeserializationError::Ok) {
 		error_msg = "JSON parse failed";
 		goto error_out;
@@ -158,6 +169,15 @@ error_out:
 	else {
 		req->send(200, "text/plain", "OK");
 	}
+}
+
+static void handle_config_json_file_upload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final_)
+{
+	log_i("upload %s: chunk idx: %zu, len: %zu, is final: %d", filename.c_str(), index, len, final_);
+
+	File file = SPIFFS.open(cfg::pref::CONFIG_JSON_NEW, (index == 0)? "w" : "a");
+	file.write(data, len);
+	file.close();
 }
 
 static void handle_404(AsyncWebServerRequest *req)
@@ -199,7 +219,7 @@ void pref_portal::start_pref_portal()
 	m_http.on("/reboot", HTTP_POST, handle_reboot);
 	m_http.on("/cfg_reset", HTTP_POST, handle_cfg_reset);
 	m_http.on("/config.json", HTTP_GET, handle_config_json_get);
-	m_http.on("/config.json", HTTP_POST, handle_config_json_post);
+	m_http.on("/config.json", HTTP_POST, handle_config_json_post, handle_config_json_file_upload);
 
 	// Captive portal detector
 	m_http.on("/fwlink", HTTP_GET, handle_root);		// Microsoft

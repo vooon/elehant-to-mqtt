@@ -36,11 +36,11 @@ static String make_client_id()
 	snprintf(buf, sizeof(buf) - 1,
 		// [[[cog:
 		// len_=6
-		// fmt='%s' + '-%02X' * len_
+		// fmt='%s' + '-%02x' * len_
 		// args = [f'"{fmt}"', 'mqtt::ID_PREFIX'] + [f'mac_arr[{it}]' for it in range(len_)]
 		// cog.outl(',\n'.join(args))
 		// ]]]
-		"%s-%02X-%02X-%02X-%02X-%02X-%02X",
+		"%s-%02x-%02x-%02x-%02x-%02x-%02x",
 		mqtt::ID_PREFIX,
 		mac_arr[0],
 		mac_arr[1],
@@ -48,7 +48,7 @@ static String make_client_id()
 		mac_arr[3],
 		mac_arr[4],
 		mac_arr[5]
-		// [[[end]]] (checksum: 3878b7d71c9e3bfe43e0798359dddbd9)
+		// [[[end]]] (checksum: f52b59c7ceb867a8bf0997624b8a10bb)
 		);
 
 	return buf;

@@ -11,7 +11,7 @@
 
 namespace cfg {
 namespace io {
-	constexpr auto CFG_CLEAR = 36;
+	constexpr auto CFG_CLEAR = 22;
 	constexpr auto LED = 25;
 #define BOARD_HAS_LED	1
 };
@@ -48,6 +48,7 @@ namespace time {
 
 namespace pref {
 	constexpr auto CONFIG_JSON = "/config.json";
+	constexpr auto CONFIG_JSON_NEW = "/config.json.new";
 	constexpr auto JS_TYPE_HEADER = "ESP-PREFERENCES-V1.0";
 
 	extern bool portal_enabled;
