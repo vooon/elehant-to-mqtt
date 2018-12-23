@@ -5,7 +5,7 @@
 
 using namespace ota;
 
-#if 0	// disable - stable core don't have HTTPUpdate module
+#if 1	// disable - stable core don't have HTTPUpdate module
 
 #include <HTTPUpdate.h>
 
