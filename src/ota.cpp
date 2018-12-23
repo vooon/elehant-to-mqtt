@@ -14,7 +14,7 @@ static String m_ota_url = "";
 static WiFiClient m_client;
 
 
-Result ota::update()
+static Result update()
 {
 	HTTPUpdateResult res;
 

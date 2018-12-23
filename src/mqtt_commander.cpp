@@ -2,16 +2,14 @@
 #include "common.h"
 #include "mqtt_commander.h"
 #include "config.h"
-#include "feed_motor.h"
+//#include "feed_motor.h"
 #include "ota.h"
-#include "i2c_scan.h"
-#include "sound.h"
-#include "uptime.h"
-#include "ledmatrix.h"
+//#include "i2c_scan.h"
+//#include "sound.h"
+#include <uptime.h>
+//#include "ledmatrix.h"
 
 #include <AsyncMqttClient.h>
-#include <WiFiUdp.h>
-#include <NTPClient.h>
 #include <ArduinoJson.h>
 
 #ifndef ESP8266
@@ -19,15 +17,11 @@ extern "C" uint8_t temprature_sens_read();
 #endif
 
 static AsyncMqttClient m_mqtt_client;
-static WiFiUDP m_ntp_udp;
-NTPClient g_ntp(m_ntp_udp, cfg::rtc::NTP_POOL);
-
-static volatile bool m_report_feed_completion = false;
-static bool m_feed_success = false;
 
 static TimerHandle_t m_mqtt_reconnect_tmr;
 static TimerHandle_t m_report_stats_tmr;
-static TimerHandle_t m_scheduled_dispense_tmr;
+
+using TT = cfg::topic::Type;
 
 namespace MQTT {
 enum Qos : uint8_t {
@@ -40,7 +34,7 @@ enum Qos : uint8_t {
 template<typename T>
 static void pub_topic(T prefix, String value, MQTT::Qos qos=MQTT::QOS0, bool retain=false)
 {
-	m_mqtt_client.publish(cfg::topic::make(prefix).c_str(), qos, retain, value.c_str(), value.length());
+	//m_mqtt_client.publish(cfg::topic::make(prefix).c_str(), qos, retain, value.c_str(), value.length());
 }
 
 static void pub_success(String msg, String arg1 = String())
@@ -49,8 +43,8 @@ static void pub_success(String msg, String arg1 = String())
 		msg += " " + arg1;
 	}
 
-	Log.notice(F("Pub success: %s\n"), msg.c_str());
-	pub_topic(cfg::topic::PUB_SUCCESS_PREFIX, msg, MQTT::QOS2);
+	//Log.notice(F("Pub success: %s\n"), msg.c_str());
+	//pub_topic(cfg::topic::PUB_SUCCESS_PREFIX, msg, MQTT::QOS2);
 }
 
 static void pub_error(String msg, String desc = String())
@@ -59,12 +53,13 @@ static void pub_error(String msg, String desc = String())
 		msg += " " + desc;
 	}
 
-	Log.error(F("Pub error: %s\n"), msg.c_str());
-	pub_topic(cfg::topic::PUB_ERROR_PREFIX, msg, MQTT::QOS2);
+	//Log.error(F("Pub error: %s\n"), msg.c_str());
+	//pub_topic(cfg::topic::PUB_ERROR_PREFIX, msg, MQTT::QOS2);
 }
 
 static void pub_device_info()
 {
+#if 0
 	StaticJsonBuffer<256> jbuf;
 
 	auto &root = jbuf.createObject();
@@ -96,10 +91,12 @@ static void pub_device_info()
 	pub_topic(cfg::topic::PUB_DEV_INFO, devinfo, MQTT::QOS1);
 
 	Log.trace(F("Device Info: %s\n"), devinfo.c_str());
+#endif
 }
 
 static void pub_stats()
 {
+#if 0
 	StaticJsonBuffer<256> jbuf;
 
 	auto &root = jbuf.createObject();
@@ -127,6 +124,7 @@ static void pub_stats()
 
 	Log.trace(F("Update alive: %s\n"), epoch.c_str());
 	Log.trace(F("Stats: %s\n"), stats.c_str());
+#endif
 }
 
 static void tmr_report_stats(TimerHandle_t timer)
@@ -136,22 +134,8 @@ static void tmr_report_stats(TimerHandle_t timer)
 
 static void tmr_mqtt_reconnect(TimerHandle_t timer)
 {
-	Log.notice(F("MQTT: Connecting to: %s:%d\n"), cfg::mqtt::broker.c_str(), cfg::mqtt::port);
+	log_i("MQTT: Connecting to: %s:%d", cfg::mqtt::broker.c_str(), cfg::mqtt::port);
 	m_mqtt_client.connect();
-}
-
-static void dev_configure(std::vector<char> &payload)
-{
-	Log.notice(F("Runtime reconfigure req\n"));
-
-	DynamicJsonBuffer js_buffer(512);
-	JsonObject &js_root = js_buffer.parseObject(payload.data());
-	if (!js_root.success()) {
-		pub_error(cfg::msgs::ERROR_INVAL_JSON);
-		return;
-	}
-
-	// XXX
 }
 
 static void on_mqtt_message(char *c_topic, char *c_payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
@@ -160,10 +144,11 @@ static void on_mqtt_message(char *c_topic, char *c_payload, AsyncMqttClientMessa
 	memcpy(payload.data(), c_payload, len);
 	payload[len] = '\0';	// force line termination
 
-	Log.trace(F("SUB: %s (qos: %d, dup: %d, retain: %d, sz: %d:%d:%d) => %s\n"),
-			c_topic, properties.qos, properties.dup, properties.retain,
-			len, index, total,
-			payload.data());
+#if 0
+	//Log.trace(F("SUB: %s (qos: %d, dup: %d, retain: %d, sz: %d:%d:%d) => %s\n"),
+	//		c_topic, properties.qos, properties.dup, properties.retain,
+	//		len, index, total,
+	//		payload.data());
 
 	if (0 == strcmp(c_topic, cfg::topic::SUB_SERVER_ALIVE)) {
 		soft_wdt::feed();
@@ -227,19 +212,20 @@ static void on_mqtt_message(char *c_topic, char *c_payload, AsyncMqttClientMessa
 	else {
 		pub_error(cfg::msgs::ERROR_CMD_UNK);
 	}
+#endif
 }
 
 static void on_mqtt_connect(bool session_present)
 {
-	Log.notice(F("MQTT connected. Session present: %d\n"), session_present);
+	log_i("MQTT connected. Session present: %d", session_present);
 
 	// Publish ONLINE, board info
-	pub_topic(cfg::topic::PUB_WILL_PREFIX, cfg::msgs::WILL_OK_MSG, MQTT::QOS1, true);
+	//pub_topic(cfg::topic::PUB_WILL_PREFIX, cfg::msgs::WILL_OK_MSG, MQTT::QOS1, true);
 	pub_device_info();
 
-	m_mqtt_client.subscribe(cfg::topic::make(cfg::topic::SUB_COMMAND_PREFIX).c_str(), MQTT::QOS2);
-	m_mqtt_client.subscribe(cfg::topic::SUB_SERVER_ALIVE, MQTT::QOS0);
-	m_mqtt_client.subscribe(cfg::topic::make(cfg::topic::SUB_DEV_CONFIG).c_str(), MQTT::QOS2);
+	//m_mqtt_client.subscribe(cfg::topic::make(cfg::topic::SUB_COMMAND_PREFIX).c_str(), MQTT::QOS2);
+	//m_mqtt_client.subscribe(cfg::topic::SUB_SERVER_ALIVE, MQTT::QOS0);
+	//m_mqtt_client.subscribe(cfg::topic::make(cfg::topic::SUB_DEV_CONFIG).c_str(), MQTT::QOS2);
 
 	xTimerStart(m_report_stats_tmr, 0);
 	tmr_report_stats(nullptr);
@@ -247,42 +233,37 @@ static void on_mqtt_connect(bool session_present)
 
 static void on_mqtt_disconnect(AsyncMqttClientDisconnectReason reason)
 {
-	Log.fatal(F("MQTT connection lost. Reason: %d\n"), reason);
+	log_e("MQTT connection lost. Reason: %d", reason);
 
 	xTimerStop(m_report_stats_tmr, 0);
 }
 
 void mqtt::init()
 {
-	Log.notice(F("Initializing MQTT...\n"));
+	log_i("Initializing MQTT...");
 
-	auto will_topic = cfg::topic::make(cfg::topic::PUB_WILL_PREFIX);
+	auto will_topic = cfg::topic::make(TT::stat, "LWT");
 
 	m_mqtt_client
 		.onConnect(on_mqtt_connect)
 		.onDisconnect(on_mqtt_disconnect)
 		.onMessage(on_mqtt_message)
-		.setClientId(cfg::mqtt::id.c_str())
+		.setClientId(cfg::mqtt::client_id.c_str())
 		.setKeepAlive(cfg::mqtt::KEEPALIVE)
 		.setCleanSession(true)			// default - true
-		.setWill(strdup(will_topic.c_str()), MQTT::QOS1, true, cfg::msgs::WILL_MSG)	// strdup() required because class stores pointer, not copy of the string
+		// strdup() required because class stores pointer, not copy of the string
+		.setWill(strdup(will_topic.c_str()), MQTT::QOS1, true, cfg::msgs::LWT_OFFLINE)
 		.setServer(cfg::mqtt::broker.c_str(), cfg::mqtt::port)
 		;
 
 	if (cfg::mqtt::user.length() > 0)
 		m_mqtt_client.setCredentials(cfg::mqtt::user.c_str(), cfg::mqtt::password.c_str());
 
-	Log.notice(F("Enabling NTP...\n"));
-	g_ntp.begin();
-
 	m_mqtt_reconnect_tmr = xTimerCreate("mqtt-reconnect", pdMS_TO_TICKS(2000),
 			pdFALSE, NULL, tmr_mqtt_reconnect);
 
-	m_report_stats_tmr = xTimerCreate("report-stats", pdMS_TO_TICKS(cfg::timer::ALIVE_PING_MS),
+	m_report_stats_tmr = xTimerCreate("report-stats", pdMS_TO_TICKS(cfg::timer::STATUS_REPORT_MS),
 			pdTRUE, NULL, tmr_report_stats);
-
-	m_scheduled_dispense_tmr = xTimerCreate("sched-dispence", pdMS_TO_TICKS(1000),
-			pdFALSE, NULL, tmr_dispense_portion);
 }
 
 void mqtt::on_wifi_state_change()
@@ -290,23 +271,13 @@ void mqtt::on_wifi_state_change()
 	auto connected = WiFi.isConnected();
 
 	if (connected) {
-		Log.trace(F("MQTT: run reconnect.\n"));
+		log_i("MQTT: run reconnect.");
 		xTimerStart(m_mqtt_reconnect_tmr, 0);
 	}
 	else {
-		Log.trace(F("MQTT: stop reconnect.\n"));
+		log_i("MQTT: stop reconnect.");
 		xTimerStop(m_mqtt_reconnect_tmr, 0);
 	}
-}
-
-void mqtt::loop()
-{
-	g_ntp.update();
-
-}
-
-void mqtt::shedule_report_feed(bool success)
-{
 }
 
 void mqtt::ota_report(ota::Result result)
@@ -317,11 +288,11 @@ void mqtt::ota_report(ota::Result result)
 		break;
 
 	case ota::NO_UPDATES:
-		pub_success(cfg::msgs::OTA_NO_UPDATES);
+		//pub_success(cfg::msgs::OTA_NO_UPDATES);
 		break;
 
 	case ota::FAILED:
-		pub_error(cfg::msgs::OTA_FAILED, ota::last_error());
+		//pub_error(cfg::msgs::OTA_FAILED, ota::last_error());
 		break;
 	}
 }

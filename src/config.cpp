@@ -126,7 +126,7 @@ static void update_gparameters()
 
 void cfg::init()
 {
-	log_i("Config init...")
+	log_i("Config init...");
 
 	init_gparameters();
 

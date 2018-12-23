@@ -54,9 +54,8 @@ namespace pref {
 };
 
 namespace timer {
-	constexpr auto ALIVE_PING_MS = 10000;
+	constexpr auto STATUS_REPORT_MS = 10000;
 	constexpr auto LED_BLINK_MS = 500;
-	constexpr auto SERVER_HEARTBEAT_TIMEOUT_MS = 60000;
 };
 
 namespace topic {
@@ -77,7 +76,12 @@ namespace topic {
 
 	template<typename T>
 	inline String make(Type type, T topic) {
-		return to_string(type) + "/" + mqtt::client_id + "/" + String(topic).toUpperCase();
+		String topic_s(topic);
+		topic_s.toUpperCase();
+
+		return to_string(type) + "/"
+			+ mqtt::client_id + "/"
+			+ topic_s;
 	}
 };
 

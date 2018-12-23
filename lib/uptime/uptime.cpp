@@ -1,6 +1,14 @@
 
 #include "uptime.h"
 
+#include <Arduino.h>
+
+extern "C" {
+	#include <freertos/FreeRTOS.h>
+	#include <freertos/timers.h>
+}
+
+
 static volatile uint64_t m_uptime = 0;
 static uint32_t m_last_millis = 0;
 

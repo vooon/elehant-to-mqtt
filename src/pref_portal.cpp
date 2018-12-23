@@ -3,9 +3,11 @@
 #include "config.h"
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
-#include <AsyncJson.h>
+//#include <AsyncJson.h>
 #include <DNSServer.h>
 #include <SPIFFS.h>
+
+#if 0
 
 constexpr auto P_HTTP = 80;
 constexpr auto P_DNS = 53;
@@ -63,7 +65,7 @@ static bool captive_portal(AsyncWebServerRequest *req)
 
 	snprintf(url, sizeof(url) - 1, "http://%d.%d.%d.%d/", ip[0], ip[1], ip[2], ip[3]);
 
-	Log.notice(F("PREF: request redirect to captive portal\n"));
+	log_i("PREF: request redirect to captive portal\n");
 	req->redirect(url);
 
 	return true;
@@ -74,14 +76,14 @@ static void handle_root(AsyncWebServerRequest *req)
 	if (captive_portal(req))
 		return;
 
-	Log.trace(F("PREF: handle_root()\n"));
+	log_d("PREF: handle_root()");
 
 	req->send(200, "text/html", INDEX_HTML);
 }
 
 static void handle_reboot(AsyncWebServerRequest *req)
 {
-	Log.trace(F("PREF: handle_reboot()\n"));
+	log_d("PREF: handle_reboot()");
 
 	// XXX make some time for response
 	die();
@@ -91,7 +93,7 @@ static void handle_reboot(AsyncWebServerRequest *req)
 
 static void handle_cfg_reset(AsyncWebServerRequest *req)
 {
-	Log.trace(F("PREF: handle_cfg_reset()\n"));
+	log_d("PREF: handle_cfg_reset()");
 
 	// XXX make some time for response
 	cfg::reset_and_die();
@@ -101,14 +103,14 @@ static void handle_cfg_reset(AsyncWebServerRequest *req)
 
 static void handle_config_json_get(AsyncWebServerRequest *req)
 {
-	Log.trace(F("PREF: handle_config_json_get()\n"));
+	log_d("PREF: handle_config_json_get()");
 
 	req->send(SPIFFS, cfg::pref::CONFIG_JSON, "application/json");
 }
 
 static void handle_config_json_post(AsyncWebServerRequest *req)
 {
-	Log.trace(F("PREF: handle_config_json_post()\n"));
+	log_d("PREF: handle_config_json_post()");
 
 	String error_msg;
 	auto body_p = req->getParam(0);
@@ -119,17 +121,20 @@ static void handle_config_json_post(AsyncWebServerRequest *req)
 
 	auto body = body_p->value();
 
-	Log.trace(F("POST Body: %s\n---\n"), body_p->name().c_str());
+	log_d("POST Body: %s\n---", body_p->name().c_str());
 	Serial.println(body);
 	Serial.println("---");
 
-	DynamicJsonBuffer js_buffer(512);
-	JsonObject &js_root = js_buffer.parseObject(body);
+	DynamicJsonDocument jdoc(512);
 
-	if (!js_root.success()) {
+
+	auto ret = deserializeJson(jdoc, body);
+	if (ret != DeserializationError::Ok) {
 		error_msg = "JSON parse failed";
 		goto error_out;
 	}
+
+	auto js_root = jdoc.as<JsonObject>();
 
 	if (js_root["type"] != cfg::pref::JS_TYPE_HEADER) {
 		error_msg = "No type header";
@@ -142,14 +147,14 @@ static void handle_config_json_post(AsyncWebServerRequest *req)
 			error_msg = "file open error";
 		}
 		else {
-			js_root.printTo(file);
+			serializeJson(jdoc, file);
 			file.close();
 		}
 	}
 
 error_out:
 	if (error_msg.length() != 0) {
-		Log.error(F("PREF: upload error: %s\n"), error_msg.c_str());
+		log_e("PREF: upload error: %s", error_msg.c_str());
 		req->send(400, "text/palin", error_msg);
 	}
 	else {
@@ -171,7 +176,7 @@ static void handle_404(AsyncWebServerRequest *req)
 
 void pref_portal::start_wifi_ap()
 {
-	Log.notice(F("PREF: starting AP mode\n"));
+	log_i("PREF: starting AP mode");
 
 	auto host = cfg::get_hostname();
 
@@ -181,8 +186,7 @@ void pref_portal::start_wifi_ap()
 
 	auto ap_ip = WiFi.softAPIP();
 
-	Log.notice(F("AP IP: "));
-	Serial.println(ap_ip);
+	log_i("AP IP: %d.%d.%d.%d", ap_ip[0], ap_ip[1], ap_ip[2], ap_ip[3]);
 
 	// Setup DNS to redirect all domains to captive portal
 	m_dns.setErrorReplyCode(DNSReplyCode::NoError);
@@ -191,7 +195,7 @@ void pref_portal::start_wifi_ap()
 
 void pref_portal::start_pref_portal()
 {
-	Log.notice(F("PREF: Starting portal\n"));
+	log_i("PREF: Starting portal");
 
 	m_http.on("/", HTTP_GET, handle_root);
 	m_http.on("/reboot", HTTP_POST, handle_reboot);
@@ -206,14 +210,16 @@ void pref_portal::start_pref_portal()
 	m_http.onNotFound(handle_404);
 
 	m_http.begin();
-	Log.notice(F("PREF: HTTP server started\n"));
+	log_i("PREF: HTTP server started");
 }
 
 void pref_portal::run()
 {
-	Log.notice(F("PREF: lock in AP mode.\n"));
+	log_i("PREF: lock in AP mode.");
 	for (;;) {
 		m_dns.processNextRequest();
 		delay(1);
 	}
 }
+
+#endif
