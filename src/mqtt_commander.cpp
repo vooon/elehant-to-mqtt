@@ -57,7 +57,7 @@ static void pub_device_info()
 
 	auto fw = root.createNestedObject("fw");
 	fw["version"] = cfg::msgs::FW_VERSION;
-	fw["md5"] = ESP.getSketchMD5();
+	//fw["md5"] = ESP.getSketchMD5();	// XXX only present in fresh platform, with HTTPUpdate
 	fw["sdk-version"] = ESP.getSdkVersion();
 
 	auto hw = root.createNestedObject("hw");
