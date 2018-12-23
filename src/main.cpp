@@ -73,9 +73,9 @@ void setup()
 	Serial.begin(115200);
 	log_i("Setup");
 
-
 	cfg::init();
 	uptime::init();
+	ntp::init();
 	wifi_init();
 	mqtt::init();
 	ble::init();
@@ -85,5 +85,5 @@ void setup()
 void loop()
 {
 	m_wifi_multi.run();
-	delay(10);
+	delay(1000);
 }

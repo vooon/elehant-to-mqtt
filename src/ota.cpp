@@ -48,7 +48,7 @@ static void updater_thd(void *arg)
 	auto result = update();
 
 	log_i("OTA result: %d", result);
-	//mqtt::ota_report(result);
+	mqtt::ota_report(result);
 
 	vTaskDelete(NULL);
 }
