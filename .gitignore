@@ -3,3 +3,5 @@
 .piolibdeps
 
 *.swp
+mqtt-spy.log
+mqtt-spy.messages

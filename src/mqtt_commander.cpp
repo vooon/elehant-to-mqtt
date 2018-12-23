@@ -2,12 +2,8 @@
 #include "common.h"
 #include "mqtt_commander.h"
 #include "config.h"
-//#include "feed_motor.h"
 #include "ota.h"
-//#include "i2c_scan.h"
-//#include "sound.h"
 #include <uptime.h>
-//#include "ledmatrix.h"
 
 #include <AsyncMqttClient.h>
 #include <ArduinoJson.h>
@@ -31,100 +27,55 @@ enum Qos : uint8_t {
 };
 } // namespace MQTT
 
-template<typename T>
-static void pub_topic(T prefix, String value, MQTT::Qos qos=MQTT::QOS0, bool retain=false)
+static void pub_topic(TT type, String topic, const String &value, MQTT::Qos qos=MQTT::QOS0, bool retain=false)
 {
-	//m_mqtt_client.publish(cfg::topic::make(prefix).c_str(), qos, retain, value.c_str(), value.length());
+	m_mqtt_client.publish(cfg::topic::make(type, topic).c_str(), qos, retain, value.c_str(), value.length());
 }
 
-static void pub_success(String msg, String arg1 = String())
+static void pub_topic(TT type, String topic, const DynamicJsonDocument jdoc, MQTT::Qos qos=MQTT::QOS0, bool retain=false)
 {
-	if (arg1.length() != 0) {
-		msg += " " + arg1;
-	}
+	String value;
+	serializeJson(jdoc, value);
 
-	//Log.notice(F("Pub success: %s\n"), msg.c_str());
-	//pub_topic(cfg::topic::PUB_SUCCESS_PREFIX, msg, MQTT::QOS2);
-}
-
-static void pub_error(String msg, String desc = String())
-{
-	if (desc.length() != 0) {
-		msg += " " + desc;
-	}
-
-	//Log.error(F("Pub error: %s\n"), msg.c_str());
-	//pub_topic(cfg::topic::PUB_ERROR_PREFIX, msg, MQTT::QOS2);
+	m_mqtt_client.publish(cfg::topic::make(type, topic).c_str(), qos, retain, value.c_str(), value.length());
 }
 
 static void pub_device_info()
 {
-#if 0
-	StaticJsonBuffer<256> jbuf;
+	DynamicJsonDocument jdoc(128);
+	JsonObject root = jdoc.as<JsonObject>();
 
-	auto &root = jbuf.createObject();
-
-	auto &fw = root.createNestedObject("fw");
+	auto fw = root.createNestedObject("fw");
 	fw["version"] = cfg::msgs::FW_VERSION;
-	//fw["md5"] = ESP.getSketchMD5(); // XXX FIXME
+	fw["md5"] = ESP.getSketchMD5();
 	fw["sdk-version"] = ESP.getSdkVersion();
 
-	auto &hw = root.createNestedObject("hw");
+	auto hw = root.createNestedObject("hw");
 	hw["board"] = cfg::msgs::HW_VERSION;
-	hw["actuator-type"] = feedmotor::get_actuator_variant();
 	hw["cycle-count"] = ESP.getCycleCount();
 	hw["chip-rev"] = +ESP.getChipRevision();
 
-	if (sound::module_present) {
-		hw["snd-type"] = sound::get_module_type();
-	}
-
-	if (!i2cscan::last_scan_results.empty()) {
-		auto &i2cslaves = hw.createNestedArray("i2c-slaves");
-
-		for (auto addr : i2cscan::last_scan_results)
-			i2cslaves.add(addr);
-	}
-
-	String devinfo; root.printTo(devinfo);
-
-	pub_topic(cfg::topic::PUB_DEV_INFO, devinfo, MQTT::QOS1);
-
-	Log.trace(F("Device Info: %s\n"), devinfo.c_str());
-#endif
+	pub_topic(TT::stat, "INFO", jdoc);
 }
 
 static void pub_stats()
 {
-#if 0
-	StaticJsonBuffer<256> jbuf;
-
-	auto &root = jbuf.createObject();
-
-	root["now"] = millis();
-	root["uptime"] = (long unsigned int) uptime::uptime_ms() / 1000;
-	root["feed-counter"] = feedmotor::feed_counter;
-	root["wifi-rssi"] = WiFi.RSSI();
-	root["wifi-ssid"] = WiFi.SSID();
-#ifdef ESP8266
-	root["board-voltage"] = ESP.getVcc();
-#else
-	root["hall-sensor"] = hallRead();
+	DynamicJsonDocument jdoc(128);
+	JsonObject root = jdoc.as<JsonObject>();
 
 	auto t_f = temprature_sens_read();
 	float t_c = (t_f - 32.0f) / 1.8f;
+
+	root["now"] = millis();
+	root["uptime"] = (long unsigned int) uptime::uptime_ms() / 1000;
+	root["wifi-rssi"] = WiFi.RSSI();
+	root["wifi-ssid"] = WiFi.SSID();
+	root["hall-sensor"] = hallRead();
 	root["cpu-temp"] = t_c;
-#endif
 
-	String epoch(g_ntp.getEpochTime(), 10);
-	String stats; root.printTo(stats);
+	//String epoch(g_ntp.getEpochTime(), 10);
 
-	pub_topic(cfg::topic::PUB_ALIVE_PREFIX, epoch);
-	pub_topic(cfg::topic::PUB_STATISTICS, stats);
-
-	Log.trace(F("Update alive: %s\n"), epoch.c_str());
-	Log.trace(F("Stats: %s\n"), stats.c_str());
-#endif
+	pub_topic(TT::stat, "DEVICE", jdoc);
 }
 
 static void tmr_report_stats(TimerHandle_t timer)
@@ -140,92 +91,55 @@ static void tmr_mqtt_reconnect(TimerHandle_t timer)
 
 static void on_mqtt_message(char *c_topic, char *c_payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
 {
-	std::vector<char> payload(len + 1);
-	memcpy(payload.data(), c_payload, len);
-	payload[len] = '\0';	// force line termination
+	std::string topic(c_topic);
+	std::string payload(c_payload, len);
+	DynamicJsonDocument jdoc(128);
+	JsonObject root = jdoc.as<JsonObject>();
 
-#if 0
-	//Log.trace(F("SUB: %s (qos: %d, dup: %d, retain: %d, sz: %d:%d:%d) => %s\n"),
-	//		c_topic, properties.qos, properties.dup, properties.retain,
-	//		len, index, total,
-	//		payload.data());
+	log_i("SUB: %s (qos: %d, dup: %d, retain: %d, sz: %d:%d:%d) => %s",
+			c_topic, properties.qos, properties.dup, properties.retain,
+			len, index, total,
+			payload.c_str());
 
-	if (0 == strcmp(c_topic, cfg::topic::SUB_SERVER_ALIVE)) {
-		soft_wdt::feed();
-		return;
-	}
-	else if (0 == strcmp(c_topic, cfg::topic::make(cfg::topic::SUB_DEV_CONFIG).c_str())) {
-		dev_configure(payload);
-		return;
-	}
-	else if (0 != strncmp(c_topic, cfg::topic::SUB_COMMAND_PREFIX, strlen(cfg::topic::SUB_COMMAND_PREFIX))) {
-		Log.error(F("Unexpected topic subs.\n"));
-		return;
+	auto slash_pos = topic.rfind('/');
+	auto command = topic.substr(slash_pos);
+	for (auto &c : command) {
+		c = ::toupper(c);
 	}
 
-	std::vector<String> argv;
-	argv.reserve(2);
+	if (command == "OTAURL") {
+		root[command] = "Started";
 
-	char *p = payload.data();
-	char *saveptr = nullptr;
-	for (;;) {
-		auto tok = strtok_r(p, " \t", &saveptr);
-		p = nullptr;
-
-		if (tok == nullptr) {
-			break;
+		if (payload.length()) {
+			ota::start_update(payload.c_str());
 		}
-
-		argv.emplace_back(tok);
-	}
-
-	if (argv.empty()) {
-		pub_error(cfg::msgs::ERROR_INVAL, "incorrect payload");
-		return;
-	}
-
-	if (argv[0] == cfg::msgs::CMD_OTA) {
-		pub_success(cfg::msgs::OTA_STARTED);
-		if (argv.size() > 1)
-			ota::start_update(argv[1]);
-		else
+		else {
 			ota::start_update();
-	}
-	else if (argv[0] == cfg::msgs::CMD_REBOOT) {
-		pub_success(cfg::msgs::RST_OK);
-		die();
-	}
-	else if (argv[0] == cfg::msgs::CMD_RESET_SETTINGS) {
-		pub_success(cfg::msgs::RST_CFG);
-		cfg::reset_and_die();
-	}
-	else if (argv[0] == cfg::msgs::CMD_STEPS) {
-		if (argv.size() < 2) {
-			pub_error(cfg::msgs::ERROR_INVAL, "args");
-			return;
 		}
-
-		auto steps = strtol(argv[1].c_str(), nullptr, 0);
-		pub_success(cfg::msgs::STEPS_Q, String(steps));
-		feedmotor::rotate_steps(steps, true, false);
+	}
+	else if (command == "CFG_CLEAR") {
+		cfg::reset_and_die();	// noreturn
+	}
+	else if (command == "REBOOT") {
+		die();			// noreturn
 	}
 	else {
-		pub_error(cfg::msgs::ERROR_CMD_UNK);
+		root["COMMAND_UNKNOWN"] = command;
 	}
-#endif
+
+	pub_topic(TT::stat, "RESULT", jdoc);
 }
 
 static void on_mqtt_connect(bool session_present)
 {
 	log_i("MQTT connected. Session present: %d", session_present);
 
-	// Publish ONLINE, board info
-	//pub_topic(cfg::topic::PUB_WILL_PREFIX, cfg::msgs::WILL_OK_MSG, MQTT::QOS1, true);
+	// Publish ONLINE
+	pub_topic(TT::tele, "LWT", String(cfg::msgs::LWT_ONLINE), MQTT::QOS1, true);
+
 	pub_device_info();
 
-	//m_mqtt_client.subscribe(cfg::topic::make(cfg::topic::SUB_COMMAND_PREFIX).c_str(), MQTT::QOS2);
-	//m_mqtt_client.subscribe(cfg::topic::SUB_SERVER_ALIVE, MQTT::QOS0);
-	//m_mqtt_client.subscribe(cfg::topic::make(cfg::topic::SUB_DEV_CONFIG).c_str(), MQTT::QOS2);
+	m_mqtt_client.subscribe(cfg::topic::make(TT::cmnd, "#").c_str(), MQTT::QOS2);
 
 	xTimerStart(m_report_stats_tmr, 0);
 	tmr_report_stats(nullptr);
@@ -242,7 +156,7 @@ void mqtt::init()
 {
 	log_i("Initializing MQTT...");
 
-	auto will_topic = cfg::topic::make(TT::stat, "LWT");
+	auto will_topic = cfg::topic::make(TT::tele, "LWT");
 
 	m_mqtt_client
 		.onConnect(on_mqtt_connect)
