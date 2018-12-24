@@ -32,7 +32,7 @@ static void pub_topic(TT type, String topic, const String &value, MQTT::Qos qos=
 {
 	auto full_topic = cfg::topic::make(type, topic);
 
-	log_i("PUB (s): %s (q:%d,r:%d) = %s", full_topic.c_str(), qos, retain, value.c_str());
+	log_d("PUB (s): %s (q:%d,r:%d) = %s", full_topic.c_str(), qos, retain, value.c_str());
 	m_mqtt_client.publish(full_topic.c_str(), qos, retain, value.c_str(), value.length());
 }
 
@@ -43,7 +43,7 @@ static void pub_topic(TT type, String topic, const DynamicJsonDocument jdoc, MQT
 	auto full_topic = cfg::topic::make(type, topic);
 	serializeJson(jdoc, value);
 
-	log_i("PUB (j): %s (q:%d,r:%d) = %s", full_topic.c_str(), qos, retain, value.c_str());
+	log_d("PUB (j): %s (q:%d,r:%d) = %s", full_topic.c_str(), qos, retain, value.c_str());
 	m_mqtt_client.publish(full_topic.c_str(), qos, retain, value.c_str(), value.length());
 }
 
@@ -78,8 +78,8 @@ static void pub_stats()
 	float t_c = (t_f - 32.0f) / 1.8f;
 
 	//root["now"] = millis();
+	//root["ts"] = ntp::g_ntp.getEpochTime();
 	root["now"] = esp_timer_get_time() / 1000;
-	root["ts"] = ntp::g_ntp.getEpochTime();
 	root["uptime"] = (long unsigned int) uptime::uptime_ms() / 1000;
 	root["wifi-rssi"] = WiFi.RSSI();
 	root["wifi-ssid"] = WiFi.SSID();
@@ -164,6 +164,7 @@ static void on_mqtt_disconnect(AsyncMqttClientDisconnectReason reason)
 	log_e("MQTT connection lost. Reason: %d", reason);
 
 	xTimerStop(m_report_stats_tmr, 0);
+	xTimerStart(m_mqtt_reconnect_tmr, 0);
 }
 
 void mqtt::init()
