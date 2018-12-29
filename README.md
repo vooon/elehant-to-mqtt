@@ -1,5 +1,5 @@
 
-![logo: device to mqtt and influx](docs/logo.png | width=100%)
+![logo: device to mqtt and influx](docs/logo.png)
 
 
 Прошивка для ESP32 для сбора данных со счетчиков Элехант СВД-15
