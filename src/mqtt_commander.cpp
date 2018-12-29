@@ -47,14 +47,26 @@ static void pub_topic(TT type, String topic, const DynamicJsonDocument jdoc, MQT
 	m_mqtt_client.publish(full_topic.c_str(), qos, retain, value.c_str(), value.length());
 }
 
+void mqtt::json_stamp(JsonObject &root, uint32_t now=0, uint64_t ts=0)
+{
+	if (0 == now) {
+		now = millis();
+		//now = esp_timer_get_time() / 1000;
+	}
+
+	if (0 == ts)
+		ts = ntp::g_ntp.getEpochTime();
+
+	root["now"] = now;
+	root["ts"] = ts;
+}
+
 static void pub_device_info()
 {
 	DynamicJsonDocument jdoc(256);
 	JsonObject root = jdoc.to<JsonObject>();
 
-	//root["now"] = millis();
-	//root["ts"] = ntp::g_ntp.getEpochTime();
-	root["now"] = esp_timer_get_time() / 1000;
+	mqtt::json_stamp(root);
 
 	auto fw = root.createNestedObject("fw");
 	fw["version"] = cfg::msgs::FW_VERSION;
@@ -77,9 +89,7 @@ static void pub_stats()
 	auto t_f = temprature_sens_read();
 	float t_c = (t_f - 32.0f) / 1.8f;
 
-	//root["now"] = millis();
-	//root["ts"] = ntp::g_ntp.getEpochTime();
-	root["now"] = esp_timer_get_time() / 1000;
+	mqtt::json_stamp(root);
 	root["uptime"] = (long unsigned int) uptime::uptime_ms() / 1000;
 	root["wifi-rssi"] = WiFi.RSSI();
 	root["wifi-ssid"] = WiFi.SSID();
@@ -215,7 +225,7 @@ void mqtt::ota_report(ota::Result result)
 	DynamicJsonDocument jdoc(128);
 	JsonObject root = jdoc.to<JsonObject>();
 
-	root["now"] = millis();
+	mqtt::json_stamp(root);
 
 	switch (result) {
 	case ota::OK:

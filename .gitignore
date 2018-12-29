@@ -5,3 +5,4 @@
 *.swp
 mqtt-spy.log
 mqtt-spy.messages
+src/version.cpp

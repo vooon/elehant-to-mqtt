@@ -14,12 +14,27 @@ static void ntp_thd(void *arg)
 	log_i("NTP thread started.");
 
 	// XXX FIXME
-
-	//configTime(0, 0, cfg::time::NTP_POOL);	// setup local time to UTC
-	//ntp::g_ntp.begin();
+	//
 
 	for (;;) {
-		//ntp::g_ntp.update();
+		delay(1000);
+
+		if (!WiFi.isConnected()) {
+			continue;
+		}
+
+		log_i("Configuring SNTP...");
+
+		// setup local time to UTC
+		configTime(0, 0, cfg::time::NTP_POOL);
+
+		log_i("Begin NTP...");
+		ntp::g_ntp.begin();
+		break;
+	}
+
+	for (;;) {
+		ntp::g_ntp.update();
 		delay(1000);
 	}
 
@@ -29,7 +44,7 @@ static void ntp_thd(void *arg)
 
 void ntp::init()
 {
-	//log_i("Enabling NTP...");
+	log_i("Starting NTP thread...");
 
-	//xTaskCreate(ntp_thd, "ntp", 4096, NULL, 4, NULL);
+	xTaskCreate(ntp_thd, "ntp", 4096, NULL, 1, NULL);
 }

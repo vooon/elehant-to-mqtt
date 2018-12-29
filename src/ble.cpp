@@ -70,10 +70,10 @@ class MyAdvertisedDeviceCallbacls:
 	{
 		log_d("Got advertisment");
 
-		//auto now = millis();
-		//auto ts = ntp::g_ntp.getEpochTime();
-		uint32_t now = esp_timer_get_time() / 1000;
-		auto ts = 0;
+		auto now = millis();
+		auto ts = ntp::g_ntp.getEpochTime();
+		//uint32_t now = esp_timer_get_time() / 1000;
+		//auto ts = 0;
 
 		if (1 /* TODO add flag */)
 			send_raw(now, ts, dev);
@@ -91,8 +91,7 @@ class MyAdvertisedDeviceCallbacls:
 
 		auto addr_type = dev.getAddressType();
 
-		root["now"] = now;
-		root["ts"] = ts;
+		mqtt::json_stamp(root, now, ts);
 
 		auto jdev = root.createNestedObject("dev");
 		jdev["bdaddr"] = dev.getAddress().toString();
@@ -153,13 +152,12 @@ class MyAdvertisedDeviceCallbacls:
 		DynamicJsonDocument jdoc(512);
 		auto root = jdoc.to<JsonObject>();
 
-		root["now"] = now;
-		root["ts"] = ts;
+		mqtt::json_stamp(root, now, ts);
 		root["seq"] = +edata.seq;
 
 		auto jdev = root.createNestedObject("dev");
 		jdev["bdaddr"] = dev.getAddress().toString();
-		jdev["mfg_device_num"] = edata.device_num;
+		jdev["device_num"] = edata.device_num;
 		jdev["rssi"] = dev.getRSSI();
 		jdev["message_type"] = "Elehant SVD-15 B0";
 
