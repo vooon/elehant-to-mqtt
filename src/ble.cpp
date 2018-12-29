@@ -26,8 +26,10 @@ static inline std::string to_hex(const std::string &str)
 	return ret;
 }
 
-class ElehantMeterAdvertisment00 {
+class ElehantMeterAdvertismentB0 {
 public:
+	static constexpr auto MESSAGE_TYPE = "Elehant SVD-15 B0";
+
 	uint8_t seq;		// sequence number
 	uint32_t device_num;	// meter mfg number
 	uint32_t counter;	// counter in 0.1 L
@@ -78,7 +80,7 @@ class MyAdvertisedDeviceCallbacls:
 		if (1 /* TODO add flag */)
 			send_raw(now, ts, dev);
 
-		ElehantMeterAdvertisment00 elehant_data;
+		ElehantMeterAdvertismentB0 elehant_data;
 		if (elehant_data.parse(dev)) {
 			send_elehant_counter(now, ts, dev, elehant_data);
 		}
@@ -147,7 +149,7 @@ class MyAdvertisedDeviceCallbacls:
 		mqtt::ble_report_raw_adv(jdoc);
 	}
 
-	void send_elehant_counter(uint32_t now, unsigned long ts, BLEAdvertisedDevice &dev, ElehantMeterAdvertisment00 &edata)
+	void send_elehant_counter(uint32_t now, unsigned long ts, BLEAdvertisedDevice &dev, ElehantMeterAdvertismentB0 &edata)
 	{
 		DynamicJsonDocument jdoc(512);
 		auto root = jdoc.to<JsonObject>();
@@ -159,7 +161,7 @@ class MyAdvertisedDeviceCallbacls:
 		jdev["bdaddr"] = dev.getAddress().toString();
 		jdev["device_num"] = edata.device_num;
 		jdev["rssi"] = dev.getRSSI();
-		jdev["message_type"] = "Elehant SVD-15 B0";
+		jdev["message_type"] = edata.MESSAGE_TYPE;
 
 		auto cntr = root.createNestedObject("counter");
 		cntr["m3"] = edata.counter * 0.0001;

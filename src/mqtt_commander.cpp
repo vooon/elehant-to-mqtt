@@ -4,6 +4,7 @@
 #include "config.h"
 #include "ota.h"
 #include "ntp.h"
+#include "influx.h"
 #include <uptime.h>
 
 #include <AsyncMqttClient.h>
@@ -47,7 +48,7 @@ static void pub_topic(TT type, String topic, const DynamicJsonDocument jdoc, MQT
 	m_mqtt_client.publish(full_topic.c_str(), qos, retain, value.c_str(), value.length());
 }
 
-void mqtt::json_stamp(JsonObject &root, uint32_t now=0, uint64_t ts=0)
+void mqtt::json_stamp(JsonObject &root, uint32_t now, uint64_t ts)
 {
 	if (0 == now) {
 		now = millis();
@@ -71,12 +72,12 @@ static void pub_device_info()
 	auto fw = root.createNestedObject("fw");
 	fw["version"] = cfg::msgs::FW_VERSION;
 	fw["md5"] = ESP.getSketchMD5();	// XXX only present in fresh platform, with HTTPUpdate
-	fw["sdk-version"] = ESP.getSdkVersion();
+	fw["sdk_version"] = ESP.getSdkVersion();
 
 	auto hw = root.createNestedObject("hw");
 	hw["board"] = cfg::msgs::HW_VERSION;
-	hw["cycle-count"] = ESP.getCycleCount();
-	hw["chip-rev"] = +ESP.getChipRevision();
+	hw["cycle_count"] = ESP.getCycleCount();
+	hw["chip_rev"] = +ESP.getChipRevision();
 
 	pub_topic(TT::stat, "INFO", jdoc);
 }
@@ -91,12 +92,13 @@ static void pub_stats()
 
 	mqtt::json_stamp(root);
 	root["uptime"] = (long unsigned int) uptime::uptime_ms() / 1000;
-	root["wifi-rssi"] = WiFi.RSSI();
-	root["wifi-ssid"] = WiFi.SSID();
-	root["hall-sensor"] = hallRead();
-	root["cpu-temp"] = t_c;
+	root["wifi_rssi"] = WiFi.RSSI();
+	root["wifi_ssid"] = WiFi.SSID();
+	root["hall_sensor"] = hallRead();
+	root["cpu_temp"] = t_c;
 
 	pub_topic(TT::stat, "DEVICE", jdoc);
+	influx::send_status(jdoc);
 }
 
 static void tmr_report_stats(TimerHandle_t timer)
@@ -259,4 +261,5 @@ void mqtt::ble_report_raw_adv(DynamicJsonDocument jdoc)
 void mqtt::ble_report_counter(uint32_t device_num, DynamicJsonDocument jdoc)
 {
 	pub_topic(TT::tele, "SNS-" + String(device_num, 10), jdoc, MQTT::QOS1, true);
+	influx::send_counter(jdoc);
 }

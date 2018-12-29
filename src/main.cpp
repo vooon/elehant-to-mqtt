@@ -11,6 +11,7 @@
 #include "ntp.h"
 #include "ble.h"
 #include "pref_portal.h"
+#include "influx.h"
 #include <uptime.h>
 #include <soft_wdt.h>
 
@@ -79,6 +80,7 @@ void setup()
 	wifi_init();
 	mqtt::init();
 	ble::init();
+	influx::init();
 	//soft_wdt::init();
 }
 

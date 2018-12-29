@@ -15,6 +15,8 @@ constexpr auto MQTT_PORT = "mqtt-port";
 constexpr auto MQTT_USER = "mqtt-user";
 constexpr auto MQTT_PASSWD = "mqtt-passwd";
 constexpr auto PREF_PORTAL_ENABLED = "pref-portal-en";
+constexpr auto INFLUX_ADDR = "influx-addr";
+constexpr auto INFLUX_PORT = "influx-port";
 
 wl::vCredencials wl::credencials;
 String mqtt::client_id;
@@ -23,6 +25,8 @@ uint16_t mqtt::port;
 String mqtt::user;
 String mqtt::password;
 bool pref::portal_enabled = true;
+String influx::addr;
+uint16_t influx::port;
 
 
 static String make_client_id()
@@ -63,6 +67,8 @@ static void init_gparameters()
 	mqtt::password = "";
 
 	pref::portal_enabled = true;
+
+	influx::port = influx::D_PORT;
 
 	wl::credencials.clear();
 }
@@ -105,6 +111,10 @@ static void update_gparameters()
 
 	// Pref portal prefs
 	pref::portal_enabled = prefs[PREF_PORTAL_ENABLED] | true;
+
+	// Influx prefs
+	influx::addr = prefs[INFLUX_ADDR] | "";
+	influx::port = prefs[INFLUX_PORT] | influx::D_PORT;
 
 	// WiFi credencials
 	for (size_t i = 0; i < wl::CRED_MAX; i++) {
@@ -161,4 +171,33 @@ void cfg::reset_and_die()
 	SPIFFS.remove(pref::CONFIG_JSON);
 	SPIFFS.end();
 	die();
+}
+
+String cfg::get_mac()
+{
+	char buf[128];
+	uint8_t mac_arr[6];
+	uint64_t mac = ESP.getEfuseMac();
+
+	memcpy(mac_arr, &mac, sizeof(mac_arr));
+
+	snprintf(buf, sizeof(buf) - 1,
+		// [[[cog:
+		// len_=6
+		// fmt=':%02x' * len_
+		// args = [f'"{fmt[1:]}"'] + [f'mac_arr[{it}]' for it in range(len_)]
+		// cog.outl(',\n'.join(args))
+		// ]]]
+		"%s-%02x-%02x-%02x-%02x-%02x-%02x",
+		mqtt::ID_PREFIX,
+		mac_arr[0],
+		mac_arr[1],
+		mac_arr[2],
+		mac_arr[3],
+		mac_arr[4],
+		mac_arr[5]
+		// [[[end]]] (checksum: f52b59c7ceb867a8bf0997624b8a10bb)
+		);
+
+	return buf;
 }

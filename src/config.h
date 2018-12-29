@@ -42,6 +42,13 @@ namespace mqtt {
 	extern String password;
 };
 
+namespace influx {
+	constexpr auto D_PORT = 8086;
+
+	extern String addr;	//!< UDP IP addr
+	extern uint16_t port;	//!< UDP listener port
+};
+
 namespace time {
 	constexpr auto NTP_POOL = "ru.pool.ntp.org";
 };
@@ -102,5 +109,6 @@ namespace ota {
 void init();
 String get_hostname();
 void reset_and_die();
+String get_mac();
 
 };
