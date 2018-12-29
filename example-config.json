@@ -1,0 +1,13 @@
+{
+	"type": "ESP-PREFERENCES-V1.0",
+	"prefs": {
+		"wifi-ssid.0": "some AP 0",
+		"wifi-passwd.0": "AP 0 pw",
+		"wifi-ssid.1": "AP 1",
+		"wifi-passwd.1": "AP 1 pw",
+		"mqtt-client-id": "water-meter-1",
+		"mqtt-broker": "192.168.1.1",
+		"influx-addr": "192.168.1.1",
+		"influx-port": 8089
+	}
+}
