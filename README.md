@@ -23,7 +23,13 @@
 TODO
 ----
 - [x] BLE sniffer
-- [ ] mfg data decoder
-- [ ] config
-- [ ] WiFi
-- [ ] MQTT client
+- [x] mfg data decoder
+- [x] config
+- [x] WiFi
+- [x] MQTT client
+- [ ] InfluxDB client (UDP)
+- [ ] Watch dog
+- [ ] NTP date
+- [ ] LED indicate pkt sent
+- [ ] OLED display (maybe)
+- [ ] Home Assistant auto discovery
