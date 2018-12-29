@@ -188,15 +188,14 @@ String cfg::get_mac()
 		// args = [f'"{fmt[1:]}"'] + [f'mac_arr[{it}]' for it in range(len_)]
 		// cog.outl(',\n'.join(args))
 		// ]]]
-		"%s-%02x-%02x-%02x-%02x-%02x-%02x",
-		mqtt::ID_PREFIX,
+		"%02x:%02x:%02x:%02x:%02x:%02x",
 		mac_arr[0],
 		mac_arr[1],
 		mac_arr[2],
 		mac_arr[3],
 		mac_arr[4],
 		mac_arr[5]
-		// [[[end]]] (checksum: f52b59c7ceb867a8bf0997624b8a10bb)
+		// [[[end]]] (checksum: e877eed108478b98f397000155549cbc)
 		);
 
 	return buf;

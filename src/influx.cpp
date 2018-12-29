@@ -10,7 +10,7 @@ static String m_hostname;
 static String m_mac;
 
 
-static void send(InfluxDBBuffer &buf)
+static inline void send(InfluxDBBuffer &buf)
 {
 	AsyncUDPMessage msg;
 	auto str = buf.string();
@@ -26,11 +26,11 @@ void influx::send_status(DynamicJsonDocument jdoc)
 	InfluxDBBuffer buf;
 	auto root = jdoc.as<JsonObject>();
 
-	if (!is_influx_enabled)
+	if (!is_influx_enabled && WiFi.isConnected())
 		return;
 
 
-	buf.begin(TIMESTAMP_USE_SERVER_TIME, "wctr_status")
+	buf.begin(TIMESTAMP_USE_SERVER_TIME, "water_meter_bridge_status")
 		.tag(TAG_HOST, m_hostname)
 		.tag("mac", m_mac)
 		.value("uptime", root["uptime"].as<int>())
@@ -47,10 +47,10 @@ void influx::send_counter(DynamicJsonDocument jdoc)
 	InfluxDBBuffer buf;
 	auto root = jdoc.as<JsonObject>();
 
-	if (!is_influx_enabled)
+	if (!is_influx_enabled && WiFi.isConnected())
 		return;
 
-	buf.begin(TIMESTAMP_USE_SERVER_TIME, "water_counter")
+	buf.begin(TIMESTAMP_USE_SERVER_TIME, "water_meter")
 		.tag(TAG_HOST, m_hostname)
 		.tag("mac", m_mac)
 		.tag("bdaddr", root["dev"]["bdaddr"].as<String>())
@@ -69,11 +69,10 @@ void influx::init()
 
 	is_influx_enabled = m_influx_addr.fromString(cfg::influx::addr);
 	m_hostname = cfg::get_hostname();
+	m_mac = cfg::get_mac();
 
 	if (is_influx_enabled) {
-		String addr(m_influx_addr);
-
-		log_i("InfluxDB addr: %s:%u", addr.c_str(), cfg::influx::port);
+		log_i("InfluxDB addr: %s:%u", m_influx_addr.toString().c_str(), cfg::influx::port);
 	}
 	else {
 		log_i("InfluxDB disabled.");
