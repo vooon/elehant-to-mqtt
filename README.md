@@ -31,9 +31,9 @@ TODO
 - [x] config
 - [x] WiFi
 - [x] MQTT client
-- [ ] InfluxDB client (UDP)
+- [x] InfluxDB client (UDP)
 - [ ] Watch dog
-- [ ] NTP date
+- [x] NTP date
 - [ ] LED indicate pkt sent
 - [ ] OLED display (maybe)
 - [ ] Home Assistant auto discovery
