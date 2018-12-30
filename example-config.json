@@ -5,9 +5,12 @@
 		"wifi-passwd.0": "AP 0 pw",
 		"wifi-ssid.1": "AP 1",
 		"wifi-passwd.1": "AP 1 pw",
-		"mqtt-client-id": "water-meter-1",
-		"mqtt-broker": "192.168.1.1",
-		"influx-addr": "192.168.1.1",
-		"influx-port": 8089
+		// you may enter up to 20 access points
+		"mqtt-client-id": "water-meter-1",	// Will be used in topics: tele/<client-id>/topic
+		"mqtt-broker": "domus1",		// IP or Hostname
+		//"mqtt-user": "DVES_USER",
+		//"mqtt-passwd": "DVES password",
+		//"influx-addr": "192.168.1.1",		// Optional, IP Address of InfluxDB UDP listener
+		"influx-port": 8086			// UDP Port used by InfluxDB
 	}
 }
