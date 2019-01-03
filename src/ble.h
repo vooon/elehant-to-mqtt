@@ -5,7 +5,7 @@
 
 namespace ble {
 
-extern volatile size_t ble_advertise_counter;
+extern unsigned int raw_advertise_counter;
 
 void init();
 

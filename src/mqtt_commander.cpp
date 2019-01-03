@@ -85,7 +85,7 @@ static void pub_device_info()
 
 static void pub_stats()
 {
-	DynamicJsonDocument jdoc(128);
+	DynamicJsonDocument jdoc(256);
 	JsonObject root = jdoc.to<JsonObject>();
 
 	auto t_f = temprature_sens_read();
@@ -97,7 +97,7 @@ static void pub_stats()
 	root["wifi_ssid"] = WiFi.SSID();
 	root["hall_sensor"] = hallRead();
 	root["cpu_temp"] = t_c;
-	root["ble_adv_cnt"] = ble::ble_advertise_counter;
+	root["ble_adv_cnt"] = ble::raw_advertise_counter;
 
 	pub_topic(TT::stat, "DEVICE", jdoc);
 	influx::send_status(jdoc);
@@ -262,6 +262,6 @@ void mqtt::ble_report_raw_adv(DynamicJsonDocument jdoc)
 
 void mqtt::ble_report_counter(uint32_t device_num, DynamicJsonDocument jdoc)
 {
-	pub_topic(TT::tele, "SNS-" + String(device_num, 10), jdoc, MQTT::QOS1, true);
+	pub_topic(TT::tele, "SNS/" + String(device_num, 10), jdoc, MQTT::QOS1, true);
 	influx::send_counter(jdoc);
 }

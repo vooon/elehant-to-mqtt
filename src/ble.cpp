@@ -9,7 +9,7 @@
 #include <BLEAdvertisedDevice.h>
 
 
-volatile size_t ble::ble_advertise_counter = 0;
+unsigned int ble::raw_advertise_counter = 0;
 
 static BLEScan *pScan;
 
@@ -74,7 +74,7 @@ class MyAdvertisedDeviceCallbacls:
 	{
 		log_d("Got advertisment");
 
-		ble::ble_advertise_counter += 1;
+		ble::raw_advertise_counter += 1;
 
 		auto now = millis();
 		auto ts = ntp::g_ntp.getEpochTime();
@@ -92,7 +92,7 @@ class MyAdvertisedDeviceCallbacls:
 
 	void send_raw(uint32_t now, unsigned long ts, BLEAdvertisedDevice &dev)
 	{
-		DynamicJsonDocument jdoc(512);
+		DynamicJsonDocument jdoc(1024);
 		auto root = jdoc.to<JsonObject>();
 
 		auto addr_type = dev.getAddressType();
