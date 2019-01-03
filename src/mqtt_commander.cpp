@@ -4,6 +4,7 @@
 #include "config.h"
 #include "ota.h"
 #include "ntp.h"
+#include "ble.h"
 #include "influx.h"
 #include <uptime.h>
 
@@ -96,6 +97,7 @@ static void pub_stats()
 	root["wifi_ssid"] = WiFi.SSID();
 	root["hall_sensor"] = hallRead();
 	root["cpu_temp"] = t_c;
+	root["ble_adv_cnt"] = ble::ble_advertise_counter;
 
 	pub_topic(TT::stat, "DEVICE", jdoc);
 	influx::send_status(jdoc);

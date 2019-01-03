@@ -34,6 +34,7 @@ void influx::send_status(DynamicJsonDocument jdoc)
 		.value("wifi_rssi", root["wifi_rssi"].as<int>())
 		.value("hall_sensor", root["hall_sensor"].as<int>())
 		.value("cpu_temp", root["cpu_temp"].as<float>())
+		.value("ble_adv_cnt", root["ble_adv_cnt"].as<unsigned int>())
 		.end();
 
 	send(buf);

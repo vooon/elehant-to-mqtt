@@ -9,6 +9,8 @@
 #include <BLEAdvertisedDevice.h>
 
 
+volatile size_t ble::ble_advertise_counter = 0;
+
 static BLEScan *pScan;
 
 
@@ -71,6 +73,8 @@ class MyAdvertisedDeviceCallbacls:
 	void onResult(BLEAdvertisedDevice dev)
 	{
 		log_d("Got advertisment");
+
+		ble::ble_advertise_counter += 1;
 
 		auto now = millis();
 		auto ts = ntp::g_ntp.getEpochTime();
