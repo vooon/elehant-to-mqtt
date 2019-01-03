@@ -12,11 +12,8 @@ static String m_mac;
 
 static inline void send(InfluxDBBuffer &buf)
 {
-	AsyncUDPMessage msg;
-	auto str = buf.string();
-
-	msg.print(str);
-	m_influx_udp.sendTo(msg, m_influx_addr, cfg::influx::port);
+	const auto str = buf.string();
+	m_influx_udp.writeTo(reinterpret_cast<const uint8_t *>(str.c_str()), str.length(), m_influx_addr, cfg::influx::port);
 
 	log_i("INFLUX: %s", str.c_str());
 }
@@ -29,10 +26,10 @@ void influx::send_status(DynamicJsonDocument jdoc)
 	if (!is_influx_enabled && WiFi.isConnected())
 		return;
 
-
-	buf.begin(TIMESTAMP_USE_SERVER_TIME, "water_meter_bridge_status")
+	buf.begin(TIMESTAMP_USE_SERVER_TIME, "esp_status")
 		.tag(TAG_HOST, m_hostname)
 		.tag("mac", m_mac)
+		.tag("dev_type", "water_meter_proxy")
 		.value("uptime", root["uptime"].as<int>())
 		.value("wifi_rssi", root["wifi_rssi"].as<int>())
 		.value("hall_sensor", root["hall_sensor"].as<int>())
