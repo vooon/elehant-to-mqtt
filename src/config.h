@@ -13,10 +13,12 @@ namespace cfg {
 namespace io {
 	constexpr auto CFG_CLEAR = 22;
 	constexpr auto LED = 25;
-#define BOARD_HAS_LED	1
+//#define BOARD_HAS_LED	1
 
-	constexpr auto I2C_SDA = 4;
-	constexpr auto I2C_SCL = 5;
+	constexpr auto I2C_SDA = 5;
+	constexpr auto I2C_SCL = 4;
+#define BOARD_HAS_I2C	1
+#define BOARD_HAS_OLED	1
 };
 
 namespace wl {
