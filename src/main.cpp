@@ -12,6 +12,7 @@
 #include "ble.h"
 #include "pref_portal.h"
 #include "influx.h"
+#include "display.h"
 #include <uptime.h>
 #include <soft_wdt.h>
 
@@ -81,6 +82,7 @@ void setup()
 	mqtt::init();
 	ble::init();
 	influx::init();
+	display::init();
 	//soft_wdt::init();
 }
 

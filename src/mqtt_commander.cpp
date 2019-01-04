@@ -98,6 +98,7 @@ static void pub_stats()
 	root["hall_sensor"] = hallRead();
 	root["cpu_temp"] = t_c;
 	root["ble_adv_cnt"] = ble::raw_advertise_counter;
+	root["ram_free"] = esp_get_free_heap_size();
 
 	pub_topic(TT::stat, "DEVICE", jdoc);
 	influx::send_status(jdoc);

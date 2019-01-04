@@ -14,6 +14,9 @@ namespace io {
 	constexpr auto CFG_CLEAR = 22;
 	constexpr auto LED = 25;
 #define BOARD_HAS_LED	1
+
+	constexpr auto I2C_SDA = 4;
+	constexpr auto I2C_SCL = 5;
 };
 
 namespace wl {
