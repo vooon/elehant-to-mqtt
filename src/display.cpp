@@ -48,6 +48,7 @@ static void draw_normal()
 
 	if (xSemaphoreTake(m_counter_mux, pdMS_TO_TICKS(10)) == pdTRUE) {
 
+		// remove outdated
 		for (auto it = m_counter_data.cbegin(); it != m_counter_data.cend(); ) {
 			if (now - it->second.last_seen > 60000)	// XXX
 				it = m_counter_data.erase(it);
@@ -151,7 +152,7 @@ static void disp_thd(void *arg)
 	delay(1000);
 
 	// Target FPS: 4
-	constexpr uint32_t SLEEP_MS = 100;//250;
+	constexpr uint32_t SLEEP_MS = 500;//250;
 
 	for (;;) {
 		const uint32_t tstart = millis();

@@ -35,5 +35,5 @@ TODO
 - [ ] Watch dog
 - [x] NTP date
 - [ ] LED indicate pkt sent
-- [ ] OLED display (maybe)
+- [x] OLED display (maybe)
 - [ ] Home Assistant auto discovery
