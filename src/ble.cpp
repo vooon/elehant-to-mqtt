@@ -203,5 +203,5 @@ void ble::init()
 	pScan->setInterval(100);
 	pScan->setWindow(99);
 
-	xTaskCreate(ble_thd, "ble", 4096, NULL, 3, NULL);
+	xTaskCreate(ble_thd, "ble", 4096, NULL, 0, NULL);
 }
