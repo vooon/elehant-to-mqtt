@@ -5,7 +5,7 @@
 
 using namespace ota;
 
-#if 0	// disable - stable core don't have HTTPUpdate module
+#if 1	// disable - stable core don't have HTTPUpdate module
 
 #include <HTTPUpdate.h>
 
@@ -56,7 +56,7 @@ static void updater_thd(void *arg)
 void ota::start_update(String url)
 {
 	m_ota_url = url;
-	xTaskCreate(updater_thd, "ota", 10240, NULL, 2, NULL);
+	xTaskCreate(updater_thd, "ota", 10240*2, NULL, 0, NULL);
 }
 
 #else	// OTA is disabled
