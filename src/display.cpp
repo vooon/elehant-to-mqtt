@@ -25,9 +25,16 @@ struct CounterData {
 static SemaphoreHandle_t m_counter_mux = nullptr;
 static std::map<uint32_t, CounterData> m_counter_data;
 
+static inline void move_cursor(int8_t dx, int8_t dy)
+{
+	m_dis.setCursor(m_dis.getCursorX() + dx,
+			m_dis.getCursorY() + dy);
+}
 
 static void draw_normal()
 {
+	auto now = millis();
+
 	auto wl_is_connected = WiFi.isConnected();
 	auto wl_rssi = WiFi.RSSI();
 	auto wl_ssid = WiFi.SSID();
@@ -36,10 +43,10 @@ static void draw_normal()
 
 	size_t cnt_len = 0;
 	static size_t cnt_idx = 0;
+	static uint32_t prev_cnt_switch = 0;
 	CounterData cnt_data {0, 0, 0, 0};
 
 	if (xSemaphoreTake(m_counter_mux, pdMS_TO_TICKS(10)) == pdTRUE) {
-		auto now = millis();
 
 		for (auto it = m_counter_data.cbegin(); it != m_counter_data.cend(); ) {
 			if (now - it->second.last_seen > 60000)
@@ -90,14 +97,37 @@ static void draw_normal()
 	// -*- BT seen -*-
 	m_dis.drawXBitmap(70, 0, icon_bluetooth_bits, 16, 16, WHITE);
 	m_dis.setCursor(86, 2);
-	m_dis.setTextSize(2);
+	m_dis.setTextSize(2);	// 12x16
 	m_dis.printf("%03d", cnt_len);
 
 	if (cnt_data.device_num == 0) {
-		// 18x24
-		m_dis.setTextSize(3);
+		m_dis.setTextSize(3);	// 18x24
 		m_dis.setCursor(1, 28);
 		m_dis.print("NO DATA");
+	}
+	else {
+		char devnum[32];
+
+		auto dt = now - cnt_data.last_seen;
+
+		snprintf(devnum, sizeof(devnum) - 1, "N %d", cnt_data.device_num);
+		devnum[31] = '\0';
+
+		m_dis.setTextSize(1);	// 6x8
+		m_dis.setCursor(0, 18);
+		m_dis.printf("#%03d R %02d %10s", cnt_idx, cnt_data.rssi, devnum);
+
+		m_dis.setTextSize(3);
+		m_dis.setCursor(0, 28);
+		m_dis.printf("%05d", cnt_data.counter_01l / 10000);
+
+		m_dis.setTextSize(2);
+		move_cursor(0, 7);
+		m_dis.printf("%03d", (cnt_data.counter_01l % 10000) / 10);
+
+		m_dis.setCursor(0, 52);
+		m_dis.setTextSize(1);
+		m_dis.printf("%2d.%1d s ago", dt / 1000, (dt % 1000) / 100);
 	}
 }
 
@@ -116,10 +146,8 @@ static void disp_thd(void *arg)
 	m_dis.display();
 	delay(1000);
 
-	m_dis.clearDisplay();
-
 	// Target FPS: 4
-	constexpr uint32_t SLEEP_MS = 250;
+	constexpr uint32_t SLEEP_MS = 500;//250;
 
 	for (;;) {
 		const uint32_t tstart = millis();
