@@ -49,17 +49,21 @@ static void draw_normal()
 	if (xSemaphoreTake(m_counter_mux, pdMS_TO_TICKS(10)) == pdTRUE) {
 
 		for (auto it = m_counter_data.cbegin(); it != m_counter_data.cend(); ) {
-			if (now - it->second.last_seen > 60000)
+			if (now - it->second.last_seen > 60000)	// XXX
 				it = m_counter_data.erase(it);
 			else
 				it = std::next(it);
 		}
 
 		cnt_len = m_counter_data.size();
-		if (cnt_len > 0) {
-			auto it = m_counter_data.begin();
+		if (cnt_len > 0 && (now - prev_cnt_switch > 2000)) {	// XXX
+			prev_cnt_switch = now;
+			auto it = m_counter_data.cbegin();
 
-			// TODO advance to N'th element
+			if (cnt_idx >= cnt_len)
+				cnt_idx = 0;
+
+			std::advance(it, cnt_idx++);
 
 			cnt_data = it->second;
 		}
@@ -100,7 +104,7 @@ static void draw_normal()
 	m_dis.setTextSize(2);	// 12x16
 	m_dis.printf("%03d", cnt_len);
 
-	if (cnt_data.device_num == 0) {
+	if (cnt_len == 0) {
 		m_dis.setTextSize(3);	// 18x24
 		m_dis.setCursor(1, 28);
 		m_dis.print("NO DATA");
@@ -147,7 +151,7 @@ static void disp_thd(void *arg)
 	delay(1000);
 
 	// Target FPS: 4
-	constexpr uint32_t SLEEP_MS = 500;//250;
+	constexpr uint32_t SLEEP_MS = 100;//250;
 
 	for (;;) {
 		const uint32_t tstart = millis();
