@@ -6,3 +6,5 @@
 mqtt-spy.log
 mqtt-spy.messages
 src/version.cpp
+src/embedded_data.h
+src/icons_xbm.h

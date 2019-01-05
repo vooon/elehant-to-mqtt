@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import re
+import pathlib2
 import argparse
+import tempfile
 import subprocess
 
 
@@ -29,15 +32,59 @@ VER_TPL = """
 const char* cfg::msgs::FW_VERSION = "{git_desc}";
 """
 
+def replace_content(fd, new_content):
+    content = fd.read()
+    if content != new_content:
+        fd.seek(0)
+        fd.truncate()
+        fd.write(new_content)
+
 
 ver_content = VER_TPL.format(**locals())
 
 with open('./src/version.cpp', 'a+') as fd:
-    content = fd.read()
-    if content != ver_content:
-        fd.seek(0)
-        fd.truncate()
-        fd.write(ver_content)
+    replace_content(fd, ver_content)
+
+
+# Embed all files
+if 0:
+    ddir = pathlib2.Path('./data')
+    defines['COMPONENT_EMBED_TXTFILES'] = ':'.join(str(f) for f in ddir.iterdir())
+
+    with open('./src/embedded_data.h', 'a+') as fd:
+        edata_content = "#pragma once\n"
+        for f in ddir.iterdir():
+            name = re.sub(r'[/,\.\ ]', '_', str(f))
+
+            TPL = '''extern const uint8_t {name}_{label}[] asm("_binary_{name}_{label}");\n'''
+
+            edata_content += TPL.format(name=name, label='start')
+            edata_content += TPL.format(name=name, label='end')
+
+        replace_content(fd, edata_content)
+
+
+# Embed icons
+if 1:
+    ddir = pathlib2.Path('./icons')
+
+    xbm_content = ""
+
+    for f in ddir.glob('*.bmp'):
+        tf = f.with_suffix('.xbm')
+        #tf = pathlib2.Path(tempfile.mktemp(suffix='.xbm'))
+
+        subprocess.check_output(['convert', str(f), str(tf)])
+
+        with tf.open('r') as fd:
+            xbm = fd.read()
+            xbm_content += xbm.replace('char ', 'const uint8_t icon_').replace('#define ', '#define icon_')
+
+        tf.unlink()
+
+    with open('./src/icons_xbm.h', 'a+') as fd:
+        replace_content(fd, xbm_content)
+
 
 
 if args.define:
