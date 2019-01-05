@@ -266,3 +266,8 @@ void mqtt::ble_report_counter(uint32_t device_num, DynamicJsonDocument jdoc)
 	pub_topic(TT::tele, "SNS/" + String(device_num, 10), jdoc, MQTT::QOS1, true);
 	influx::send_counter(jdoc);
 }
+
+bool mqtt::is_connected()
+{
+	return m_mqtt_client.connected();
+}

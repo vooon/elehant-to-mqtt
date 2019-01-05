@@ -70,7 +70,7 @@ if 1:
 
     xbm_content = ""
 
-    for f in ddir.glob('*.bmp'):
+    for f in sorted(ddir.glob('*.bmp')):
         tf = f.with_suffix('.xbm')
         #tf = pathlib2.Path(tempfile.mktemp(suffix='.xbm'))
 

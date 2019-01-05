@@ -2,6 +2,7 @@
 #include "ble.h"
 #include "ntp.h"
 #include "mqtt_commander.h"
+#include "display.h"
 
 #include <BLEDevice.h>
 #include <BLEUtils.h>
@@ -173,6 +174,7 @@ class MyAdvertisedDeviceCallbacls:
 		cntr["ml"] = uint64_t(edata.counter) * 100;
 
 		mqtt::ble_report_counter(edata.device_num, jdoc);
+		display::update_counter(now, edata.device_num, edata.counter, dev.getRSSI());
 	}
 };
 
