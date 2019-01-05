@@ -34,7 +34,7 @@ cache:
     - "~/.platformio"
 
 install:
-  - pip install -U platformio
+  - pip install -U platformio pathlib2
   - platformio update
 
 script:
