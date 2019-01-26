@@ -73,7 +73,8 @@ static void wifi_init()
 void setup()
 {
 	Serial.begin(115200);
-	log_i("Setup");
+	//log_i("Setup");
+	Serial.println("Setup");
 
 	cfg::init();
 	uptime::init();
