@@ -16,6 +16,8 @@ extern "C" {
 	#include <freertos/timers.h>
 }
 
+constexpr int USE_CORE = 1;
+
 // common functions
 
 [[noreturn]] void die();

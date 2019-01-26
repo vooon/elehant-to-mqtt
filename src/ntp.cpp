@@ -46,5 +46,5 @@ void ntp::init()
 {
 	log_i("Starting NTP thread...");
 
-	xTaskCreate(ntp_thd, "ntp", 4096, NULL, 0, NULL);
+	xTaskCreatePinnedToCore(ntp_thd, "ntp", 4096, NULL, 0, NULL, USE_CORE);
 }
