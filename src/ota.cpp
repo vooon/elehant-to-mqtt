@@ -56,7 +56,7 @@ static void updater_thd(void *arg)
 void ota::start_update(String url)
 {
 	m_ota_url = url;
-	xTaskCreatePinnedToCore(updater_thd, "ota", 10240, NULL, 0, NULL, USE_CORE);
+	xTaskCreatePinnedToCore(updater_thd, "ota", 4096, NULL, 0, NULL, USE_CORE);
 }
 
 #else	// OTA is disabled
