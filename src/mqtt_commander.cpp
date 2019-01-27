@@ -8,6 +8,8 @@
 #include "influx.h"
 #include <uptime.h>
 
+#include <rom/rtc.h>
+
 #include <AsyncMqttClient.h>
 #include <ArduinoJson.h>
 
@@ -65,7 +67,7 @@ void mqtt::json_stamp(JsonObject &root, uint32_t now, uint64_t ts)
 
 static void pub_device_info()
 {
-	DynamicJsonDocument jdoc(256);
+	DynamicJsonDocument jdoc(512);
 	JsonObject root = jdoc.to<JsonObject>();
 
 	mqtt::json_stamp(root);
@@ -77,10 +79,11 @@ static void pub_device_info()
 
 	auto hw = root.createNestedObject("hw");
 	hw["board"] = cfg::msgs::HW_VERSION;
-	hw["cycle_count"] = ESP.getCycleCount();
-	hw["chip_rev"] = +ESP.getChipRevision();
 	hw["boot_count"] = cfg::get_boot_count();
 	hw["mac"] = cfg::get_mac();
+	hw["chip_rev"] = +ESP.getChipRevision();
+	hw["core0_rst"] = rtc_get_reset_reason(0);
+	hw["core1_rst"] = rtc_get_reset_reason(1);
 
 	pub_topic(TT::stat, "INFO", jdoc);
 }
