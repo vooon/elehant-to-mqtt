@@ -82,8 +82,8 @@ static void pub_device_info()
 	hw["boot_count"] = cfg::get_boot_count();
 	hw["mac"] = cfg::get_mac();
 	hw["chip_rev"] = +ESP.getChipRevision();
-	hw["core0_rst"] = rtc_get_reset_reason(0);
-	hw["core1_rst"] = rtc_get_reset_reason(1);
+	hw["core0_rst"] = +rtc_get_reset_reason(0);
+	hw["core1_rst"] = +rtc_get_reset_reason(1);
 
 	pub_topic(TT::stat, "INFO", jdoc);
 }
