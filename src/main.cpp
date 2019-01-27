@@ -84,11 +84,18 @@ void setup()
 	ble::init();
 	influx::init();
 	display::init();
-	//soft_wdt::init();
+
+	// Start WDT that should reboot if Wi-Fi do not reconnect in time.
+	soft_wdt::init(cfg::wl::SETUP_TIMEOUT_SEC * 1000);
 }
 
 void loop()
 {
 	m_wifi_multi.run();
+
+	if (WiFi.isConnected()) {
+		soft_wdt::feed();
+	}
+
 	delay(1000);
 }

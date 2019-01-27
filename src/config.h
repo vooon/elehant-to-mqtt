@@ -115,5 +115,6 @@ void init();
 String get_hostname();
 void reset_and_die();
 String get_mac();
+uint32_t get_boot_count();
 
 };

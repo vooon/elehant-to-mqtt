@@ -4,6 +4,7 @@
 #include <FS.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
+#include <Preferences.h>
 
 using namespace cfg;
 
@@ -17,6 +18,7 @@ constexpr auto MQTT_PASSWD = "mqtt-passwd";
 constexpr auto PREF_PORTAL_ENABLED = "pref-portal-en";
 constexpr auto INFLUX_ADDR = "influx-addr";
 constexpr auto INFLUX_PORT = "influx-port";
+constexpr auto BOOT_COUNTER = "boot-cnt";
 
 wl::vCredencials wl::credencials;
 String mqtt::client_id;
@@ -28,6 +30,7 @@ bool pref::portal_enabled = true;
 String influx::addr;
 uint16_t influx::port;
 
+static Preferences m_pref;
 
 static String make_client_id()
 {
@@ -154,7 +157,10 @@ void cfg::init()
 
 	update_gparameters();
 
-	log_i("MQTT Client ID: %s", mqtt::client_id.c_str());
+	auto bootcnt = get_boot_count();
+
+	log_e("MQTT Client ID: %s", mqtt::client_id.c_str());
+	log_e("Boot count: %u", bootcnt);
 }
 
 String cfg::get_hostname()
@@ -199,4 +205,23 @@ String cfg::get_mac()
 		);
 
 	return buf;
+}
+
+uint32_t cfg::get_boot_count()
+{
+	static uint32_t counter = 0;
+	static bool is_configured = false;
+
+	if (!is_configured) {
+		is_configured = true;
+
+		m_pref.begin(mqtt::ID_PREFIX, false);
+
+		counter = m_pref.getUInt(BOOT_COUNTER, 0);
+		m_pref.putUInt(BOOT_COUNTER, ++counter);
+
+		m_pref.end();
+	}
+
+	return counter;
 }

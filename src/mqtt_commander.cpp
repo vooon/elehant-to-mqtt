@@ -79,6 +79,8 @@ static void pub_device_info()
 	hw["board"] = cfg::msgs::HW_VERSION;
 	hw["cycle_count"] = ESP.getCycleCount();
 	hw["chip_rev"] = +ESP.getChipRevision();
+	hw["boot_count"] = cfg::get_boot_count();
+	hw["mac"] = cfg::get_mac();
 
 	pub_topic(TT::stat, "INFO", jdoc);
 }
@@ -92,7 +94,7 @@ static void pub_stats()
 	float t_c = (t_f - 32.0f) / 1.8f;
 
 	mqtt::json_stamp(root);
-	root["uptime"] = (long unsigned int) uptime::uptime_ms() / 1000;
+	root["uptime"] = uptime::uptime_ms() / 1000.0;
 	root["wifi_rssi"] = WiFi.RSSI();
 	root["wifi_ssid"] = WiFi.SSID();
 	root["hall_sensor"] = hallRead();
@@ -142,6 +144,11 @@ static void on_mqtt_message(char *c_topic, char *c_payload, AsyncMqttClientMessa
 		else {
 			ota::start_update();
 		}
+	}
+	else if (command == "INFO") {
+		root[command] = "OK";
+		pub_device_info();
+		pub_stats();
 	}
 	else if (command == "CFG_CLEAR") {
 		cfg::reset_and_die();	// noreturn
