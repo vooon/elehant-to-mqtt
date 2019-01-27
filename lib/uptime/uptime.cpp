@@ -3,11 +3,12 @@
 
 #include <Arduino.h>
 
+#if 0
+
 extern "C" {
 	#include <freertos/FreeRTOS.h>
 	#include <freertos/timers.h>
 }
-
 
 static volatile uint64_t m_uptime = 0;
 static uint32_t m_last_millis = 0;
@@ -34,3 +35,20 @@ uint64_t uptime::uptime_ms()
 {
 	return m_uptime;
 }
+
+#else
+
+#include "esp_timer.h"
+
+void uptime::init()
+{
+}
+
+uint64_t uptime::uptime_ms()
+{
+	auto uptime_us = esp_timer_get_time();
+
+	return uptime_us / 1000;
+}
+
+#endif
