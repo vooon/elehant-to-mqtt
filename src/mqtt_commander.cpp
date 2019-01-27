@@ -9,6 +9,12 @@
 #include <uptime.h>
 
 #include <rom/rtc.h>
+#include <esp_partition.h>
+
+extern "C" {
+#include "esp_ota_ops.h"
+#include "esp_image_format.h"
+}
 
 #include <AsyncMqttClient.h>
 #include <ArduinoJson.h>
@@ -74,7 +80,7 @@ static void pub_device_info()
 
 	auto fw = root.createNestedObject("fw");
 	fw["version"] = cfg::msgs::FW_VERSION;
-	fw["md5"] = ESP.getSketchMD5();	// XXX only present in fresh platform, with HTTPUpdate
+	fw["md5"] = ESP.getSketchMD5();
 	fw["sdk_version"] = ESP.getSdkVersion();
 
 	auto hw = root.createNestedObject("hw");
@@ -82,8 +88,18 @@ static void pub_device_info()
 	hw["boot_count"] = cfg::get_boot_count();
 	hw["mac"] = cfg::get_mac();
 	hw["chip_rev"] = +ESP.getChipRevision();
-	hw["core0_rst"] = +rtc_get_reset_reason(0);
-	hw["core1_rst"] = +rtc_get_reset_reason(1);
+	hw["core0_rst"] = int(rtc_get_reset_reason(0));
+	hw["core1_rst"] = int(rtc_get_reset_reason(1));
+
+	auto flash = root.createNestedObject("flash");
+	flash["size_mib"] = ESP.getFlashChipSize() / 1024.0 / 1024.0;
+	flash["speed_mhz"] = ESP.getFlashChipSpeed() / 1e6;
+	flash["mode"] = int(ESP.getFlashChipMode());
+
+	const esp_partition_t *part = esp_ota_get_running_partition();
+	if (part != nullptr) {
+		flash["part"] = part->label;
+	}
 
 	pub_topic(TT::stat, "INFO", jdoc);
 }
