@@ -24,6 +24,16 @@
 Лицензировано на условиях GPL v3.
 
 
+Железо
+------
+
+Принципиально прошивка может работать на любой плате с ESP32, т.к. все необходимое уже встроено в чип.
+Желательно иметь экран SSD1603, который есть на плате Wemos ESP32 OLED.
+Но все будет работать и без него, просто без какой-либо индикации.
+
+![photo of device running firmware](docs/IMG_20190127_181700.jpg)
+
+
 TODO
 ----
 - [x] BLE sniffer
@@ -32,8 +42,9 @@ TODO
 - [x] WiFi
 - [x] MQTT client
 - [x] InfluxDB client (UDP)
-- [ ] Watch dog
+- [x] Watch dog (soft wdt on WiFi connection)
 - [x] NTP date
-- [ ] LED indicate pkt sent
+- [ ] LED indicate pkt sent (maybe)
 - [x] OLED display (maybe)
-- [ ] Home Assistant auto discovery
+- [ ] Home Assistant auto discovery (maybe)
+- [x] OTA
