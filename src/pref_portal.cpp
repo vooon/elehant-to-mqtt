@@ -114,7 +114,7 @@ static void handle_config_json_post(AsyncWebServerRequest *req)
 	String error_msg;
 	AsyncWebParameter *file_p = nullptr;
 	DeserializationError ret;
-	DynamicJsonDocument jdoc(512);
+	DynamicJsonDocument jdoc(1024);
 	JsonObject js_root;
 
 	if (req->hasParam("file", true, true)) {

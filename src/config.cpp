@@ -78,7 +78,7 @@ static void init_gparameters()
 
 static void update_gparameters()
 {
-	DynamicJsonDocument jdoc(512);
+	DynamicJsonDocument jdoc(1024);
 
 	// -- read file --
 	File file = SPIFFS.open(pref::CONFIG_JSON);
