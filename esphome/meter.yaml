@@ -114,3 +114,66 @@ sensor:
   - platform: total_daily_energy
     name: Water1 Total Liters daily
     power_id: water1_total_l
+
+font:
+  - file: 'slkscr.ttf'
+    id: font1
+    size: 8
+
+  - file: 'BebasNeue-Regular.ttf'
+    id: font2
+    size: 48
+
+image:
+  - file: "icons/bluetooth.bmp"
+    id: bluetooth_img
+  - file: "icons/check.bmp"
+    id: check_img
+  - file: "icons/no_con.bmp"
+    id: no_con_img
+  - file: "icons/signal_1.bmp"
+    id: signal_1_img
+  - file: "icons/signal_2.bmp"
+    id: signal_2_img
+  - file: "icons/signal_3.bmp"
+    id: signal_3_img
+  - file: "icons/signal_4.bmp"
+    id: signal_4_img
+  - file: "icons/talk.bmp"
+    id: talk_img
+  - file: "icons/temperature.bmp"
+    id: temperature_img
+  - file: "icons/warning.bmp"
+    id: warning_img
+  - file: "icons/wifi1.bmp"
+    id: wifi_1_img
+  - file: "icons/wifi2.bmp"
+    id: wifi_2_img
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    lambda: |-
+
+      auto wl_is_connected = WiFi.isConnected();
+      auto wl_rssi = WiFi.RSSI();
+      auto wl_strength_img = id(no_con_img);
+
+      if (!wl_is_connected)
+        wl_strength_img = id(no_con_img);
+      else if (wl_rssi > -67)
+        wl_strength_img = id(signal_4_img);
+      else if (wl_rssi > -70)
+        wl_strength_img = id(signal_3_img);
+      else if (wl_rssi > -80)
+        wl_strength_img = id(signal_2_img);
+      else
+        wl_strength_img = id(signal_1_img);
+
+      it.image(0, 0, (wl_is_connected)? id(wifi_1_img) : id(wifi_2_img));
+      it.image(16, 0, wl_strength_img);
+      it.image(34, 0, id(talk_img));
+      it.image(50, 0, (id(api_apiserver).is_connected())? id(check_img) : id(no_con_img));
+
+      it.printf(16, 16, id(font1), TextAlign::TOP_LEFT, "Hello world!");
