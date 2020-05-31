@@ -54,3 +54,12 @@ sensor:
 
   - platform: uptime
     name: "Uptime"
+
+  - platform: xiaomi_lywsdcgq
+    mac_address: 4C:65:A8:D9:9D:9D
+    temperature:
+      name: "Xiaomi LYWSDCGQ Temperature"
+    humidity:
+      name: "Xiaomi LYWSDCGQ Humidity"
+    battery_level:
+      name: "Xiaomi LYWSDCGQ Battery Level"
