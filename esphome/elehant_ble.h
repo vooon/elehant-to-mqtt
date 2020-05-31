@@ -14,9 +14,7 @@ class ElehantBLE : public Component, public esp32_ble_tracker::ESPBTDeviceListen
 		void set_serial_no(uint32_t serial_no) { serial_no_ = serial_no; }
 
 		bool parse_device(const esp32_ble_tracker::ESPBTDevice &device) override {
-
-
-			ESP_LOGI(TAG, "parse_device(): kuku! %s", device.address_str().c_str());
+			//ESP_LOGI(TAG, "parse_device(): kuku! %s", device.address_str().c_str());
 
 			// this devices have MAC starting from: B0:01:02:
 			uint64_t mac = device.address_uint64();
@@ -44,8 +42,8 @@ class ElehantBLE : public Component, public esp32_ble_tracker::ESPBTDeviceListen
 
 			auto &mfg_data = mfg_datas[0];
 
-			ESP_LOGI(TAG, "d uuid= %s", mfg_data.uuid.to_string().c_str());
-			ESP_LOGI(TAG, "d len= %d", mfg_data.data.size());
+			//ESP_LOGI(TAG, "d uuid= %s", mfg_data.uuid.to_string().c_str());
+			//ESP_LOGI(TAG, "d len= %d", mfg_data.data.size());
 
 			if (!mfg_data.uuid.contains(0xff, 0xff)) {
 				ESP_LOGE(TAG, "parse_device(): unexpected manufacturer data uuid: %s", mfg_data.uuid.to_string().c_str());
@@ -79,7 +77,7 @@ class ElehantBLE : public Component, public esp32_ble_tracker::ESPBTDeviceListen
 			total_l_->publish_state(counter * 0.1);
 			rssi_->publish_state(device.get_rssi());
 
-			return false;
+			return true;
 		}
 
 		float get_setup_priority() const override { return setup_priority::DATA; }

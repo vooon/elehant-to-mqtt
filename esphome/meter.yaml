@@ -95,10 +95,12 @@ sensor:
     sensors:
       - name: Water1 Total
         unit_of_measurement: m3
+        accuracy_decimals: 4
         icon: mdi:water-pump
         id: water1_total_m3
       - name: Water1 Total (liters)
         unit_of_measurement: L
+        accuracy_decimals: 1
         icon: mdi:water-pump
         id: water1_total_l
       - name: Water1 Meter RSSI
