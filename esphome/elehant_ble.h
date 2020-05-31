@@ -44,7 +44,7 @@ class ElehantBLE : public Component, public esp32_ble_tracker::ESPBTDeviceListen
 
 			auto &mfg_data = mfg_datas[0];
 
-			ESP_LOGI(TAG, "d uuid= %d", mfg_data.uuid.to_string().c_str());
+			ESP_LOGI(TAG, "d uuid= %s", mfg_data.uuid.to_string().c_str());
 			ESP_LOGI(TAG, "d len= %d", mfg_data.data.size());
 
 			if (!mfg_data.uuid.contains(0xff, 0xff)) {
@@ -64,12 +64,12 @@ class ElehantBLE : public Component, public esp32_ble_tracker::ESPBTDeviceListen
 			uint32_t device_num;
 			uint32_t counter;
 
-			seq = mfg_data.at(1);
-			memcpy(&device_num, &mfg_data.data.at(2), 3); device_num &= 0x00ffffff;
-			memcpy(&counter, &mfg_data.data.at(5), 4);
+			seq = mfg_data.data.at(1);
+			memcpy(&device_num, &mfg_data.data.at(6), 3); device_num &= 0x00ffffff;
+			memcpy(&counter, &mfg_data.data.at(9), 4);
 
 			if (serial_no != device_num) {
-				ESP_LOGE(TAG, "parse_device(): serial number from MAC and data do not match, likely that format is changed. %#06 != %#06", serial_no, device_num);
+				ESP_LOGE(TAG, "parse_device(): serial number from MAC and data do not match, likely that format is changed. %#06x != %#06x", serial_no, device_num);
 				return false;
 			}
 

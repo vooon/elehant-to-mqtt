@@ -34,10 +34,11 @@ ota:
 web_server:
 
 esp32_ble_tracker:
+  id: ble_tracker
   scan_parameters:
     interval: 100ms
     window: 99ms
-    duration: 5min
+    duration: 1min
     active: false
 
 time:
@@ -70,13 +71,14 @@ sensor:
     name: "Uptime"
 
   - platform: xiaomi_lywsdcgq
-    mac_address: 4C:65:A8:D9:9D:9D
+    mac_address: 4C:65:A8:D0:7F:A4
+    # mac_address: 4C:65:A8:D9:9D:9D
     temperature:
-      name: "Xiaomi LYWSDCGQ Temperature"
+      name: "Room1 Temperature"
     humidity:
-      name: "Xiaomi LYWSDCGQ Humidity"
+      name: "Room1 Humidity"
     battery_level:
-      name: "Xiaomi LYWSDCGQ Battery Level"
+      name: "Room1 temperature/humidity sensor Battery Level"
 
   - platform: custom
     lambda: |-
@@ -87,13 +89,19 @@ sensor:
 
       // Register
       App.register_component(meter1);
-      esp32_ble_tracker_esp32bletracker->register_listener(meter1);
+      id(ble_tracker)->register_listener(meter1);
       return {meter1->total_m3_, meter1->total_l_, meter1->rssi_};
 
     sensors:
-      - name: Water Total
+      - name: Water1 Total
         unit_of_measurement: m3
-      - name: Water Total (liters)
+        icon: mdi:water-pump
+        id: water1_total_m3
+      - name: Water1 Total (liters)
         unit_of_measurement: L
-      - name: Water Meter RSSI
+        icon: mdi:water-pump
+        id: water1_total_l
+      - name: Water1 Meter RSSI
+        icon: mdi:signal
+        id: water1_rssi
 
