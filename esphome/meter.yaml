@@ -1,7 +1,16 @@
+#
+# Alternative firmware based on ESPHome project.
+# It it more flexible as it's up to you what additional sensors you want to support.
+#
+# That firmware uses custom sensor that parses BLE advertisements.
+#
+---
 esphome:
   name: meter
   platform: ESP32
   board: esp-wrover-kit
+  includes:
+    - elehant_ble.h
 
 wifi:
   networks: !secret wifi_networks
@@ -63,3 +72,21 @@ sensor:
       name: "Xiaomi LYWSDCGQ Humidity"
     battery_level:
       name: "Xiaomi LYWSDCGQ Battery Level"
+
+  - platform: custom
+    lambda: |-
+      auto meter1 = new ElehantBLE();
+
+      // Set serial number of the device! Like a mac_address for other BLE sensors.
+      meter1->set_serial_no(9953);
+
+      // Register
+      App.register_component(meter1);
+      esp32_ble_tracker_esp32bletracker->register_listener(meter1);
+      return {meter1->total_m3_, meter1->total_l_};
+
+    sensors:
+      - name: Water Total
+        unit_of_measurement: m3
+      - name: Water Total (liters)
+        unit_of_measurement: L
