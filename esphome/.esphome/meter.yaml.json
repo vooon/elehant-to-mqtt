@@ -1,0 +1,14 @@
+{
+  "storage_version": 1,
+  "name": "meter",
+  "comment": null,
+  "esphome_version": "1.15.0-dev",
+  "src_version": 1,
+  "arduino_version": null,
+  "address": "meter.local",
+  "esp_platform": "ESP32",
+  "board": "esp-wrover-kit",
+  "build_path": null,
+  "firmware_bin_path": null,
+  "loaded_integrations": []
+}

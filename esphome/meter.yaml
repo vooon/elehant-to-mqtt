@@ -1,0 +1,56 @@
+esphome:
+  name: meter
+  platform: ESP32
+  board: esp-wrover-kit
+
+wifi:
+  networks: !secret wifi_networks
+
+  ap:
+    ssid: "Meter Fallback Hotspot"
+    password: !secret wifi_ap_passwd
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  # password: "test"
+
+ota:
+  # password: "test"
+
+web_server:
+
+esp32_ble_tracker:
+
+time:
+  - platform: homeassistant
+    id: esp_time
+  - platform: sntp
+    id: ntp_time
+    timezone: Europe/Moscow
+
+text_sensor:
+  - platform: wifi_info
+    ssid:
+      name: SSID
+    bssid:
+      name: BSSID
+
+  - platform: version
+    name: "ESPHome version"
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal Sensor"
+    update_interval: 10s
+
+  - platform: esp32_hall
+    name: "ESP32 Hall Sensor"
+    update_interval: 10s
+
+  - platform: uptime
+    name: "Uptime"
