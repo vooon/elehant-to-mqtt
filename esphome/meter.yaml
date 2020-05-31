@@ -33,6 +33,10 @@ ota:
 
 web_server:
 
+i2c:
+  scl: 4
+  sda: 5
+
 esp32_ble_tracker:
   id: ble_tracker
   scan_parameters:
@@ -107,3 +111,6 @@ sensor:
         icon: mdi:signal
         id: water1_rssi
 
+  - platform: total_daily_energy
+    name: Water1 Total Liters daily
+    power_id: water1_total_l
