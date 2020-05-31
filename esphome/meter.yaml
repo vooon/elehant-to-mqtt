@@ -27,6 +27,7 @@ logger:
 # Enable Home Assistant API
 api:
   # password: "test"
+  reboot_timeout: 5min
 
 ota:
   # password: "test"
@@ -40,8 +41,8 @@ i2c:
 esp32_ble_tracker:
   id: ble_tracker
   scan_parameters:
-    interval: 100ms
-    window: 99ms
+    # interval: 100ms
+    # window: 99ms
     duration: 5min
     active: false
 
@@ -61,6 +62,17 @@ text_sensor:
 
   - platform: version
     name: "ESPHome version"
+
+binary_sensor:
+  - platform: status
+    name: Meter Converter Connected
+
+  - platform: gpio
+    pin:
+      number: 13
+      mode: INPUT_PULLDOWN
+    name: Terrace3 Motion
+    device_class: motion
 
 sensor:
   - platform: wifi_signal
@@ -83,6 +95,29 @@ sensor:
       name: "Room1 Humidity"
     battery_level:
       name: "Room1 temperature/humidity sensor Battery Level"
+
+  - platform: pulse_counter
+    pin:
+      number: 12
+      inverted: true
+      mode: INPUT_PULLUP
+    unit_of_measurement: kW
+    name: Power Meter
+    id: power_meter_counter
+    filters:
+      # See: https://esphome.io/cookbook/power_meter.html
+      # My meter has 3200 imp per kWh
+      - multiply: 0.01875
+
+  - platform: total_daily_energy
+    name: Power Total Daily
+    power_id: power_meter_counter
+
+  - platform: integration
+    name: Power Total
+    sensor: power_meter_counter
+    time_unit: min
+    restore: true
 
   - platform: custom
     lambda: |-
@@ -111,18 +146,22 @@ sensor:
         icon: mdi:signal
         id: water1_rssi
 
-  - platform: total_daily_energy
-    name: Water1 Total Liters daily
-    power_id: water1_total_l
+  # - platform: total_daily_energy
+  #   name: Water1 Total Liters daily
+  #   power_id: water1_total_l
+
+switch:
+  - platform: restart
+    name: Meter reboot
 
 font:
   - file: 'slkscr.ttf'
     id: font1
-    size: 8
+    size: 16
 
   - file: 'BebasNeue-Regular.ttf'
     id: font2
-    size: 48
+    size: 16
 
 image:
   - file: "icons/bluetooth.bmp"
@@ -155,25 +194,35 @@ display:
     model: "SSD1306 128x64"
     address: 0x3C
     lambda: |-
+      static bool prev_beat = false;
+      prev_beat = !prev_beat;
 
       auto wl_is_connected = WiFi.isConnected();
       auto wl_rssi = WiFi.RSSI();
-      auto wl_strength_img = id(no_con_img);
 
-      if (!wl_is_connected)
-        wl_strength_img = id(no_con_img);
-      else if (wl_rssi > -67)
-        wl_strength_img = id(signal_4_img);
-      else if (wl_rssi > -70)
-        wl_strength_img = id(signal_3_img);
-      else if (wl_rssi > -80)
-        wl_strength_img = id(signal_2_img);
-      else
-        wl_strength_img = id(signal_1_img);
+      auto wl_strength = [&](void) {
+        if (!wl_is_connected)
+          return id(no_con_img);
+        else if (wl_rssi > -67)
+          return id(signal_4_img);
+        else if (wl_rssi > -70)
+          return id(signal_3_img);
+        else if (wl_rssi > -80)
+          return id(signal_2_img);
+        else
+          return id(signal_1_img);
+      };
 
-      it.image(0, 0, (wl_is_connected)? id(wifi_1_img) : id(wifi_2_img));
-      it.image(16, 0, wl_strength_img);
+      it.image(0, 0, (prev_beat)? id(wifi_1_img) : id(wifi_2_img));
+      it.image(16, 0, wl_strength());
       it.image(34, 0, id(talk_img));
       it.image(50, 0, (id(api_apiserver).is_connected())? id(check_img) : id(no_con_img));
 
-      it.printf(16, 16, id(font1), TextAlign::TOP_LEFT, "Hello world!");
+      if (id(water1_total_m3).has_state()) {
+        it.printf(0, 18, id(font1), TextAlign::TOP_LEFT, "W: % 3.4f m3", id(water1_total_m3).state);
+      }
+      else {
+        it.printf(0, 18, id(font1), TextAlign::TOP_LEFT, "W: NO DATA");
+      }
+
+      it.printf(0, 34, id(font1), TextAlign::TOP_LEFT, "E: % 3.4f kWh min", id(power_meter_counter).state);
