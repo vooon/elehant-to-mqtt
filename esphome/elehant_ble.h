@@ -75,8 +75,8 @@ class ElehantBLE : public Component, public esp32_ble_tracker::ESPBTDeviceListen
 
 			ESP_LOGI(TAG, "parse_device(): seq = %u", seq);
 
-			total_m3_->publish_state(counter / 0.0001);
-			total_l_->publish_state(counter / 0.1);
+			total_m3_->publish_state(counter * 0.0001);
+			total_l_->publish_state(counter * 0.1);
 			rssi_->publish_state(device.get_rssi());
 
 			return false;
