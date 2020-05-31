@@ -83,10 +83,12 @@ sensor:
       // Register
       App.register_component(meter1);
       esp32_ble_tracker_esp32bletracker->register_listener(meter1);
-      return {meter1->total_m3_, meter1->total_l_};
+      return {meter1->total_m3_, meter1->total_l_, meter1->rssi_};
 
     sensors:
       - name: Water Total
         unit_of_measurement: m3
       - name: Water Total (liters)
         unit_of_measurement: L
+      - name: Water Meter RSSI
+
