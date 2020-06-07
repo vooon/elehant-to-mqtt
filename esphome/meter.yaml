@@ -164,6 +164,8 @@ sensor:
         icon: mdi:water-pump
         id: water1_total_l
       - name: Water1 Meter RSSI
+        unit_of_measurement: dB
+        accuracy_decimals: 0
         icon: mdi:signal
         id: water1_rssi
 
