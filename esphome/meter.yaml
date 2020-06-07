@@ -71,7 +71,7 @@ text_sensor:
 
 binary_sensor:
   - platform: status
-    name: Meter Converter Connected
+    name: Meter 1 Converter Connected
 
   - platform: gpio
     pin:
@@ -82,7 +82,7 @@ binary_sensor:
 
 sensor:
   - platform: wifi_signal
-    name: "WiFi Signal Sensor"
+    name: "Meter 1 WiFi Signal"
     update_interval: 10s
 
   - platform: esp32_hall
@@ -90,7 +90,7 @@ sensor:
     update_interval: 10s
 
   - platform: uptime
-    name: "Uptime"
+    name: "Meter 1 Uptime"
 
   - platform: xiaomi_lywsdcgq
     mac_address: 4C:65:A8:D0:7F:A4
@@ -158,14 +158,14 @@ sensor:
 
 switch:
   - platform: restart
-    name: Meter reboot
+    name: Meter 1 reboot
 
 font:
-  - file: 'slkscr.ttf'
+  - file: 'fonts/slkscr.ttf'
     id: font1
     size: 16
 
-  - file: 'BebasNeue-Regular.ttf'
+  - file: 'fonts/BebasNeue-Regular.ttf'
     id: font2
     size: 16
 
