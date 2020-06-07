@@ -77,8 +77,23 @@ binary_sensor:
     pin:
       number: 13
       mode: INPUT_PULLDOWN
+    filters:
+      - delayed_on: 10ms
+    id: t3_motion
     name: Terrace3 Motion
     device_class: motion
+
+  - platform: ble_presence
+    mac_address: !secret ble_0_mac
+    name: BLE 0 Presence
+
+  - platform: ble_presence
+    mac_address: !secret ble_1_mac
+    name: BLE 1 Presence
+
+  - platform: ble_presence
+    mac_address: !secret ble_2_mac
+    name: BLE 2 Presence
 
 sensor:
   - platform: wifi_signal
@@ -108,7 +123,7 @@ sensor:
       inverted: true
       mode: INPUT_PULLUP
     unit_of_measurement: kW
-    name: Power Meter
+    name: Power1 Meter
     id: power_meter_counter
     filters:
       # See: https://esphome.io/cookbook/power_meter.html
@@ -116,11 +131,11 @@ sensor:
       - multiply: 0.01875
 
   - platform: total_daily_energy
-    name: Power Total Daily
+    name: Power1 Total Daily
     power_id: power_meter_counter
 
   - platform: integration
-    name: Power Total
+    name: Power1 Total
     sensor: power_meter_counter
     time_unit: min
     restore: true
@@ -223,6 +238,10 @@ display:
       it.image(16, 0, wl_strength());
       it.image(34, 0, id(talk_img));
       it.image(50, 0, (id(api_apiserver).is_connected())? id(check_img) : id(no_con_img));
+
+      if (id(t3_motion).state) {
+        it.image(68, 0, id(warning_img));
+      }
 
       if (id(water1_total_m3).has_state()) {
         it.printf(0, 18, id(font1), TextAlign::TOP_LEFT, "W: % 3.4f m3", id(water1_total_m3).state);
