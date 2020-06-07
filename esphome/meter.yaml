@@ -15,6 +15,7 @@ esphome:
 wifi:
   networks: !secret wifi_networks
 
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Meter Fallback Hotspot"
     password: !secret wifi_ap_passwd
@@ -24,15 +25,20 @@ captive_portal:
 # Enable logging
 logger:
 
+debug:
+
 # Enable Home Assistant API
 api:
-  # password: "test"
+  password: !secret api_password
   reboot_timeout: 5min
 
 ota:
-  # password: "test"
+  password: !secret ota_password
 
 web_server:
+  auth:
+    username: admin
+    password: !secret web_password
 
 i2c:
   scl: 4
@@ -56,9 +62,9 @@ time:
 text_sensor:
   - platform: wifi_info
     ssid:
-      name: SSID
+      name: Meter 1 SSID
     bssid:
-      name: BSSID
+      name: Meter 1 BSSID
 
   - platform: version
     name: "ESPHome version"
