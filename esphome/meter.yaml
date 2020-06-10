@@ -36,7 +36,6 @@ ota:
   password: !secret ota_password
 
 web_server:
-  prometheus: true
   auth:
     username: admin
     password: !secret web_password
@@ -60,17 +59,6 @@ time:
     id: ntp_time
     timezone: Europe/Moscow
 
-globals:
-  - id: gv_water1_stamp
-    type: std::string
-    restore_value: false
-    initial_value: ""
-
-  - id: gv_water1_millis
-    type: uint32_t
-    restore_value: false
-    initial_value: "0"
-
 text_sensor:
   - platform: wifi_info
     ssid:
@@ -80,11 +68,6 @@ text_sensor:
 
   - platform: version
     name: "ESPHome version"
-
-  - platform: template
-    name: "Water1 Last Update Stamp"
-    lambda: |
-      return id(gv_water1_stamp);
 
 binary_sensor:
   - platform: status
@@ -175,14 +158,6 @@ sensor:
         accuracy_decimals: 4
         icon: mdi:water-pump
         id: water1_total_m3
-        on_value:
-          then:
-            - lambda: |
-                id(gv_water1_millis) = millis();
-
-                auto now = id(ntp_time).now();
-                id(gv_water1_stamp) = now.strftime("%Y-%m-%dT%H:%M:%S");
-
       - name: Water1 Total (liters)
         unit_of_measurement: L
         accuracy_decimals: 1
@@ -278,9 +253,3 @@ display:
       }
 
       it.printf(0, 34, id(font1), TextAlign::TOP_LEFT, "E: % 3.4f kWh min", id(power_meter_counter).state);
-
-      auto now = millis();
-      auto w1m = id(gv_water1_millis);
-      uint32_t w1_duration = (now > w1m) ? (now - w1m) : ((UINT32_MAX - w1m) + now);
-
-      it.printf(0, 50, id(font1), TextAlign::TOP_LEFT, "WD: %2.2f s ago", w1_duration/1000.0f);
