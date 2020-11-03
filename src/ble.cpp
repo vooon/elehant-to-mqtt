@@ -82,8 +82,9 @@ class MyAdvertisedDeviceCallbacls:
 		//uint32_t now = esp_timer_get_time() / 1000;
 		//auto ts = 0;
 
-		if (1 /* TODO add flag */)
+		if (cfg::ble::publish_raw) {
 			send_raw(now, ts, dev);
+		}
 
 		ElehantMeterAdvertismentB0 elehant_data;
 		if (elehant_data.parse(dev)) {
@@ -191,9 +192,11 @@ static void ble_thd(void *arg)
 		log_i("Scanning...");
 
 		// blocking
-		pScan->start(3600, true);
+		pScan->start(30, true);
 
 		//pScan->clearResults();
+
+		delay(100);
 	}
 
 	vTaskDelete(NULL);
@@ -202,11 +205,11 @@ static void ble_thd(void *arg)
 void ble::init()
 {
 	BLEDevice::init("svd-15-mqtt");
-	auto pScan = BLEDevice::getScan();
+	pScan = BLEDevice::getScan();
 	pScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacls(), true);
 	pScan->setActiveScan(false);
 	pScan->setInterval(100);
 	pScan->setWindow(99);
 
-	xTaskCreatePinnedToCore(ble_thd, "ble", 8192, NULL, 0, NULL, USE_CORE);
+	xTaskCreatePinnedToCore(ble_thd, "ble", 4096, NULL, 0, NULL, USE_CORE);
 }

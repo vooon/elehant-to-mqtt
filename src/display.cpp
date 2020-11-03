@@ -153,8 +153,8 @@ static void disp_thd(void *arg)
 	m_dis.display();
 	delay(100);
 
-	// Target FPS: 4
-	constexpr uint32_t SLEEP_MS = 250;
+	// Target FPS: 2
+	constexpr uint32_t SLEEP_MS = 500;
 
 	for (;;) {
 		const uint32_t tstart = millis();

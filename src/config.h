@@ -110,6 +110,9 @@ namespace ota {
 	constexpr auto URL = "http://esp.vehq.ru:8092/bin/elehant/fw.bin";
 };
 
+namespace ble {
+	extern bool publish_raw;
+};
 
 void init();
 String get_hostname();

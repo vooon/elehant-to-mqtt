@@ -19,6 +19,7 @@ constexpr auto PREF_PORTAL_ENABLED = "pref-portal-en";
 constexpr auto INFLUX_ADDR = "influx-addr";
 constexpr auto INFLUX_PORT = "influx-port";
 constexpr auto BOOT_COUNTER = "boot-cnt";
+constexpr auto BLE_PUBLISH_RAW = "ble-publish-raw";
 
 wl::vCredencials wl::credencials;
 String mqtt::client_id;
@@ -29,6 +30,7 @@ String mqtt::password;
 bool pref::portal_enabled = true;
 String influx::addr;
 uint16_t influx::port;
+bool ble::publish_raw = false;
 
 static Preferences m_pref;
 
@@ -114,6 +116,9 @@ static void update_gparameters()
 
 	// Pref portal prefs
 	pref::portal_enabled = prefs[PREF_PORTAL_ENABLED] | true;
+
+	// BLE flags
+	ble::publish_raw = prefs[BLE_PUBLISH_RAW] | false;
 
 	// Influx prefs
 	influx::addr = prefs[INFLUX_ADDR] | "";

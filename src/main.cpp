@@ -97,5 +97,5 @@ void loop()
 		soft_wdt::feed();
 	}
 
-	delay(1000);
+	delay(500);
 }
