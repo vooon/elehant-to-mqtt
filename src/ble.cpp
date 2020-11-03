@@ -12,8 +12,6 @@
 
 unsigned int ble::raw_advertise_counter = 0;
 
-static BLEScan *pScan;
-
 
 static inline std::string to_hex(const std::string &str)
 {
@@ -71,7 +69,7 @@ public:
 class MyAdvertisedDeviceCallbacls:
 	public BLEAdvertisedDeviceCallbacks
 {
-	void onResult(BLEAdvertisedDevice dev)
+	void onResult(BLEAdvertisedDevice dev) override
 	{
 		log_d("Got advertisment");
 
@@ -93,7 +91,8 @@ class MyAdvertisedDeviceCallbacls:
 
 	void send_raw(uint32_t now, unsigned long ts, BLEAdvertisedDevice &dev)
 	{
-		DynamicJsonDocument jdoc(1024);
+		//DynamicJsonDocument jdoc(1024);
+		jdoc.clear();
 		auto root = jdoc.to<JsonObject>();
 
 		auto addr_type = dev.getAddressType();
@@ -156,7 +155,8 @@ class MyAdvertisedDeviceCallbacls:
 
 	void send_elehant_counter(uint32_t now, unsigned long ts, BLEAdvertisedDevice &dev, ElehantMeterAdvertismentB0 &edata)
 	{
-		DynamicJsonDocument jdoc(512);
+		//DynamicJsonDocument jdoc(512);
+		jdoc.clear();
 		auto root = jdoc.to<JsonObject>();
 
 		mqtt::json_stamp(root, now, ts);
@@ -176,10 +176,21 @@ class MyAdvertisedDeviceCallbacls:
 		mqtt::ble_report_counter(edata.device_num, jdoc);
 		display::update_counter(now, edata.device_num, edata.counter, dev.getRSSI());
 	}
+
+private:
+	StaticJsonDocument<2048> jdoc;
 };
 
 static void ble_thd(void *arg)
 {
+	BLEDevice::init("svd-15-mqtt");
+	auto pScan = BLEDevice::getScan();
+	pScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacls(), true);
+	pScan->setActiveScan(false);
+	pScan->setInterval(100);
+	pScan->setWindow(99);
+
+
 	log_i("BLE thread started.");
 
 	for (;;) {
@@ -196,12 +207,5 @@ static void ble_thd(void *arg)
 
 void ble::init()
 {
-	BLEDevice::init("svd-15-mqtt");
-	pScan = BLEDevice::getScan();
-	pScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacls(), true);
-	pScan->setActiveScan(false);
-	pScan->setInterval(100);
-	pScan->setWindow(99);
-
-	xTaskCreatePinnedToCore(ble_thd, "ble", 4096, NULL, 0, NULL, USE_CORE);
+	xTaskCreatePinnedToCore(ble_thd, "ble", 8192, NULL, 0, NULL, USE_CORE);
 }

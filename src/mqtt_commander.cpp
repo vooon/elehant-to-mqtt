@@ -28,6 +28,8 @@ static AsyncMqttClient m_mqtt_client;
 static TimerHandle_t m_mqtt_reconnect_tmr;
 static TimerHandle_t m_report_stats_tmr;
 
+static StaticJsonDocument<512> m_jdoc;
+
 using TT = cfg::topic::Type;
 
 namespace MQTT {
@@ -46,7 +48,7 @@ static void pub_topic(TT type, String topic, const String &value, MQTT::Qos qos=
 	m_mqtt_client.publish(full_topic.c_str(), qos, retain, value.c_str(), value.length());
 }
 
-static void pub_topic(TT type, String topic, const DynamicJsonDocument jdoc, MQTT::Qos qos=MQTT::QOS0, bool retain=false)
+static void pub_topic(TT type, String topic, const JsonDocument &jdoc, MQTT::Qos qos=MQTT::QOS0, bool retain=false)
 {
 	String value;
 
@@ -73,7 +75,8 @@ void mqtt::json_stamp(JsonObject &root, uint32_t now, uint64_t ts)
 
 static void pub_device_info()
 {
-	DynamicJsonDocument jdoc(512);
+	//DynamicJsonDocument jdoc(512);
+	auto &jdoc = m_jdoc; jdoc.clear();
 	JsonObject root = jdoc.to<JsonObject>();
 
 	mqtt::json_stamp(root);
@@ -106,7 +109,8 @@ static void pub_device_info()
 
 static void pub_stats()
 {
-	DynamicJsonDocument jdoc(256);
+	//DynamicJsonDocument jdoc(256);
+	auto &jdoc = m_jdoc; jdoc.clear();
 	JsonObject root = jdoc.to<JsonObject>();
 
 	auto t_f = temprature_sens_read();
@@ -140,7 +144,8 @@ static void on_mqtt_message(char *c_topic, char *c_payload, AsyncMqttClientMessa
 {
 	std::string topic(c_topic);
 	std::string payload(c_payload, len);
-	DynamicJsonDocument jdoc(128);
+	//StaticJsonDocument<128> jdoc;
+	auto &jdoc = m_jdoc; jdoc.clear();
 	JsonObject root = jdoc.to<JsonObject>();
 
 	log_i("SUB: %s (qos: %d, dup: %d, retain: %d, sz: %d:%d:%d) => %s",
@@ -253,7 +258,7 @@ void mqtt::on_wifi_state_change(bool connected_)
 void mqtt::ota_report(ota::Result result)
 {
 	bool reboot = false;
-	DynamicJsonDocument jdoc(128);
+	StaticJsonDocument<128> jdoc;
 	JsonObject root = jdoc.to<JsonObject>();
 
 	mqtt::json_stamp(root);
@@ -282,12 +287,12 @@ void mqtt::ota_report(ota::Result result)
 	}
 }
 
-void mqtt::ble_report_raw_adv(DynamicJsonDocument jdoc)
+void mqtt::ble_report_raw_adv(const JsonDocument &jdoc)
 {
 	pub_topic(TT::tele, "BLE_ADV_RAW", jdoc, MQTT::QOS0);
 }
 
-void mqtt::ble_report_counter(uint32_t device_num, DynamicJsonDocument jdoc)
+void mqtt::ble_report_counter(uint32_t device_num, const JsonDocument &jdoc)
 {
 	pub_topic(TT::tele, "SNS/" + String(device_num, 10), jdoc, MQTT::QOS1, true);
 	influx::send_counter(jdoc);

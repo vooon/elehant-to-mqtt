@@ -18,7 +18,7 @@ static inline void send(InfluxDBBuffer &buf)
 	log_i("INFLUX: %s", str.c_str());
 }
 
-void influx::send_status(DynamicJsonDocument jdoc)
+void influx::send_status(const JsonDocument &jdoc)
 {
 	InfluxDBBuffer buf;
 	auto root = jdoc.as<JsonObject>();
@@ -41,7 +41,7 @@ void influx::send_status(DynamicJsonDocument jdoc)
 	send(buf);
 }
 
-void influx::send_counter(DynamicJsonDocument jdoc)
+void influx::send_counter(const JsonDocument &jdoc)
 {
 	InfluxDBBuffer buf;
 	auto root = jdoc.as<JsonObject>();
