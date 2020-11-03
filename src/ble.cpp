@@ -12,6 +12,8 @@
 
 unsigned int ble::raw_advertise_counter = 0;
 
+static BLEScan *pScan;
+
 
 static inline std::string to_hex(const std::string &str)
 {
@@ -183,14 +185,6 @@ private:
 
 static void ble_thd(void *arg)
 {
-	BLEDevice::init("svd-15-mqtt");
-	auto pScan = BLEDevice::getScan();
-	pScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacls(), true);
-	pScan->setActiveScan(false);
-	pScan->setInterval(100);
-	pScan->setWindow(99);
-
-
 	log_i("BLE thread started.");
 
 	for (;;) {
@@ -207,5 +201,12 @@ static void ble_thd(void *arg)
 
 void ble::init()
 {
+	BLEDevice::init("svd-15-mqtt");
+	auto pScan = BLEDevice::getScan();
+	pScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacls(), true);
+	pScan->setActiveScan(false);
+	pScan->setInterval(100);
+	pScan->setWindow(99);
+
 	xTaskCreatePinnedToCore(ble_thd, "ble", 8192, NULL, 0, NULL, USE_CORE);
 }
