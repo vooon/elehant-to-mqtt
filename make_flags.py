@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import re
-import pathlib2
+import pathlib
 import argparse
 import tempfile
 import subprocess
@@ -15,6 +15,7 @@ defines = {
     'PIO_FRAMEWORK_ESP_IDF_ENABLE_EXCEPTIONS': None,
     'ARDUINOJSON_ENABLE_PROGMEM': 0,
     'ARDUINOJSON_ENABLE_STD_STRING': 1,
+    'ARDUINOJSON_USE_LONG_LONG': 1,
 }
 
 parser = argparse.ArgumentParser()
@@ -48,7 +49,7 @@ with open('./src/version.cpp', 'a+') as fd:
 
 # Embed all files
 if 0:
-    ddir = pathlib2.Path('./data')
+    ddir = pathlib.Path('./data')
     defines['COMPONENT_EMBED_TXTFILES'] = ':'.join(str(f) for f in ddir.iterdir())
 
     with open('./src/embedded_data.h', 'a+') as fd:
@@ -66,13 +67,13 @@ if 0:
 
 # Embed icons
 if 1:
-    ddir = pathlib2.Path('./icons')
+    ddir = pathlib.Path('./icons')
 
     xbm_content = ""
 
     for f in sorted(ddir.glob('*.bmp')):
         tf = f.with_suffix('.xbm')
-        #tf = pathlib2.Path(tempfile.mktemp(suffix='.xbm'))
+        #tf = pathlib.Path(tempfile.mktemp(suffix='.xbm'))
 
         subprocess.check_output(['convert', str(f), str(tf)])
 
