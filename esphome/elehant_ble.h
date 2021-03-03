@@ -16,9 +16,10 @@ class ElehantBLE : public Component, public esp32_ble_tracker::ESPBTDeviceListen
 		bool parse_device(const esp32_ble_tracker::ESPBTDevice &device) override {
 			//ESP_LOGI(TAG, "parse_device(): kuku! %s", device.address_str().c_str());
 
-			// this devices have MAC starting from: B0:01:02:
+			// this devices have MAC starting from: B0:01:02: or B0:02:02:
 			uint64_t mac = device.address_uint64();
-			if ((mac & 0xffffff000000ULL) != 0xB00102000000ULL) {
+			uint64_t mac_sig = (mac & 0xffffff000000ULL);
+			if (!(mac_sig == 0xB00102000000ULL || mac_sig == 0xB00202000000ULL)) {
 				ESP_LOGVV(TAG, "parse_device(): unknown MAC address.");
 				return false;
 			}

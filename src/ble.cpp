@@ -45,7 +45,7 @@ public:
 		// NOTE: See docs/protocol.md
 
 		// -- validate that this package can be parsed --
-		if (memcmp(esp_addr, "\xb0\x01\x02", 3) != 0)
+		if (memcmp(esp_addr, "\xb0\x01\x02", 3) != 0 && memcmp(esp_addr, "\xb0\x02\x02", 3) != 0)
 			return false;
 
 		if (!dev.haveManufacturerData())
