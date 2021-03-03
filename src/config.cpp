@@ -20,6 +20,8 @@ constexpr auto INFLUX_ADDR = "influx-addr";
 constexpr auto INFLUX_PORT = "influx-port";
 constexpr auto BOOT_COUNTER = "boot-cnt";
 constexpr auto BLE_PUBLISH_RAW = "ble-publish-raw";
+constexpr auto DISPLAY_FLIP_V = "display-flip-v";
+constexpr auto DISPLAY_FLIP_H = "display-flip-h";
 
 wl::vCredencials wl::credencials;
 String mqtt::client_id;
@@ -31,6 +33,8 @@ bool pref::portal_enabled = true;
 String influx::addr;
 uint16_t influx::port;
 bool ble::publish_raw = false;
+bool display::flip_v = true;
+bool display::flip_h = false;
 
 static Preferences m_pref;
 
@@ -74,6 +78,9 @@ static void init_gparameters()
 	pref::portal_enabled = true;
 
 	influx::port = influx::D_PORT;
+
+	display::flip_v = true;
+	display::flip_h = false;
 
 	wl::credencials.clear();
 }
@@ -123,6 +130,10 @@ static void update_gparameters()
 	// Influx prefs
 	influx::addr = prefs[INFLUX_ADDR] | "";
 	influx::port = prefs[INFLUX_PORT] | influx::D_PORT;
+
+	// Display
+	display::flip_v = prefs[DISPLAY_FLIP_V] | true;
+	display::flip_h = prefs[DISPLAY_FLIP_H] | false;
 
 	// WiFi credencials
 	for (size_t i = 0; i < wl::CRED_MAX; i++) {

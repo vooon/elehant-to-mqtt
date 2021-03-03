@@ -114,6 +114,11 @@ namespace ble {
 	extern bool publish_raw;
 };
 
+namespace display {
+	extern bool flip_v;
+	extern bool flip_h;
+};
+
 void init();
 String get_hostname();
 void reset_and_die();

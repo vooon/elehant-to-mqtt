@@ -147,7 +147,10 @@ static void disp_thd(void *arg)
 	display::have_display = true;
 
 	m_dis.init();
-	m_dis.flipScreenVertically();
+
+	if (config::display::flip_v)	m_dis.flipScreenVertically();
+	if (config::display::flip_h)	m_dis.mirrorScreen();
+
 	m_dis.setFont(Orbitron_Medium_16);
 
 	m_dis.display();
