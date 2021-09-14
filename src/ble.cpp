@@ -33,9 +33,11 @@ class ElehantMeterAdvertismentB0 {
 public:
 	static constexpr auto MESSAGE_TYPE = "Elehant SVD-15 B0";
 
+	uint8_t tariff_idx;	// SVT-15 have two measurements
 	uint8_t seq;		// sequence number
 	uint32_t device_num;	// meter mfg number
 	uint32_t counter;	// counter in 0.1 L
+	uint16_t temperature;	// temp in 0.01 C
 
 	bool parse(BLEAdvertisedDevice &dev)
 	{
@@ -45,7 +47,11 @@ public:
 		// NOTE: See docs/protocol.md
 
 		// -- validate that this package can be parsed --
-		if (memcmp(esp_addr, "\xb0\x01\x02", 3) != 0 && memcmp(esp_addr, "\xb0\x02\x02", 3) != 0)
+		if (
+				memcmp(esp_addr, "\xb0\x01\x02", 3) != 0 &&
+				memcmp(esp_addr, "\xb0\x02\x02", 3) != 0 &&
+				memcmp(esp_addr, "\xb0\x03\x02", 3) != 0 &&
+				memcmp(esp_addr, "\xb0\x04\x02", 3) != 0)
 			return false;
 
 		if (!dev.haveManufacturerData())
@@ -59,10 +65,18 @@ public:
 		if (memcmp(&mfg_data.front(), "\xff\xff\x80", 3) != 0)
 			return false;
 
+		// index for SVD-15: 0; for SVT-15 - 1 or 2.
+		tariff_idx = 0;
+		if (memcmp(esp_addr, "\xb0\x03\x02", 3) != 0)
+			tariff_idx = 1;
+		if (memcmp(esp_addr, "\xb0\x04\x02", 3) != 0)
+			tariff_idx = 2;
+
 		// -- parse --
 		seq = mfg_data.at(3);
 		memcpy(&device_num, &mfg_data.at(8), 3);	device_num &= 0x00ffffff;
 		memcpy(&counter, &mfg_data.at(11), 4);
+		memcpy(&temperature, &mfg_data.at(16), 2);
 
 		return true;
 	}
@@ -158,7 +172,6 @@ class MyAdvertisedDeviceCallbacls:
 
 	void send_elehant_counter(uint32_t now, unsigned long ts, BLEAdvertisedDevice &dev, ElehantMeterAdvertismentB0 &edata)
 	{
-		//DynamicJsonDocument jdoc(512);
 		jdoc.clear();
 		auto root = jdoc.to<JsonObject>();
 
@@ -176,8 +189,10 @@ class MyAdvertisedDeviceCallbacls:
 		cntr["l"] = edata.counter * 0.1;
 		cntr["ml"] = uint64_t(edata.counter) * 100;
 
-		mqtt::ble_report_counter(edata.device_num, jdoc);
-		display::update_counter(now, edata.device_num, edata.counter, dev.getRSSI());
+		root["temperature"] = edata.temperature * 0.01;
+
+		mqtt::ble_report_counter(edata.device_num, edata.tariff_idx, jdoc);
+		display::update_counter(now, edata.device_num, edata.tariff_idx, edata.counter, dev.getRSSI());
 	}
 
 private:

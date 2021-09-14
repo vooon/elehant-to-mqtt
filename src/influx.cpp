@@ -21,7 +21,7 @@ static inline void send(InfluxDBBuffer &buf)
 void influx::send_status(const JsonDocument &jdoc)
 {
 	InfluxDBBuffer buf;
-	auto root = jdoc.as<JsonObject>();
+	auto root = jdoc.as<JsonObjectConst>();
 
 	if (!is_influx_enabled && WiFi.isConnected())
 		return;
@@ -44,7 +44,7 @@ void influx::send_status(const JsonDocument &jdoc)
 void influx::send_counter(const JsonDocument &jdoc)
 {
 	InfluxDBBuffer buf;
-	auto root = jdoc.as<JsonObject>();
+	auto root = jdoc.as<JsonObjectConst>();
 
 	if (!is_influx_enabled && WiFi.isConnected())
 		return;

@@ -184,11 +184,12 @@ void display::init()
 	xTaskCreatePinnedToCore(disp_thd, "disp", 4096, NULL, 0, NULL, USE_CORE);
 }
 
-void display::update_counter(uint32_t now, uint32_t device_num, uint32_t counter_01l, int rssi)
+void display::update_counter(uint32_t now, uint32_t device_num, uint8_t tariff_idx, uint32_t counter_01l, int rssi)
 {
 	if (xSemaphoreTake(m_counter_mux, pdMS_TO_TICKS(10)) != pdTRUE)
 		return;
 
+	// XXX TODO: support tariffs
 	m_counter_data[device_num] = CounterData{now, device_num, counter_01l, rssi};
 
 	xSemaphoreGive(m_counter_mux);

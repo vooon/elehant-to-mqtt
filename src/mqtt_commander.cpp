@@ -292,9 +292,13 @@ void mqtt::ble_report_raw_adv(const JsonDocument &jdoc)
 	pub_topic(TT::tele, "BLE_ADV_RAW", jdoc, MQTT::QOS0);
 }
 
-void mqtt::ble_report_counter(uint32_t device_num, const JsonDocument &jdoc)
+void mqtt::ble_report_counter(uint32_t device_num, uint8_t tariff_idx, const JsonDocument &jdoc)
 {
-	pub_topic(TT::tele, "SNS/" + String(device_num, 10), jdoc, MQTT::QOS1, true);
+	String topic = "SNS/" + String(device_num, 10);
+	if (tariff_idx > 0)
+		topic += "/" + String(tariff_idx);
+
+	pub_topic(TT::tele, topic, jdoc, MQTT::QOS1, true);
 	influx::send_counter(jdoc);
 }
 
