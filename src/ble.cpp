@@ -67,9 +67,9 @@ public:
 
 		// index for SVD-15: 0; for SVT-15 - 1 or 2.
 		tariff_idx = 0;
-		if (memcmp(esp_addr, "\xb0\x03\x02", 3) != 0)
+		if (memcmp(esp_addr, "\xb0\x03\x02", 3) == 0)
 			tariff_idx = 1;
-		if (memcmp(esp_addr, "\xb0\x04\x02", 3) != 0)
+		else if (memcmp(esp_addr, "\xb0\x04\x02", 3) == 0)
 			tariff_idx = 2;
 
 		// -- parse --
