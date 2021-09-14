@@ -120,6 +120,7 @@ static void pub_stats()
 	root["uptime"] = uptime::uptime_ms() / 1000.0;
 	root["wifi_rssi"] = WiFi.RSSI();
 	root["wifi_ssid"] = WiFi.SSID();
+	root["ipaddr"] = WiFi.localIP().toString();
 	root["hall_sensor"] = hallRead();
 	root["cpu_temp"] = t_c;
 	root["ble_adv_cnt"] = ble::raw_advertise_counter;
