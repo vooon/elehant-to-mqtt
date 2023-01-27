@@ -33,11 +33,18 @@ class ElehantMeterAdvertismentB0 {
 public:
 	static constexpr auto MESSAGE_TYPE = "Elehant SVD-15 B0";
 
-	uint8_t tariff_idx;	// SVT-15 have two measurements
-	uint8_t seq;		// sequence number
-	uint32_t device_num;	// meter mfg number
-	uint32_t counter;	// counter in 0.1 L
-	uint16_t temperature;	// temp in 0.01 C
+	uint8_t tariff_idx;		// SVT-15 have two measurements
+	uint8_t seq;			// sequence number
+	uint32_t device_num;		// meter mfg number
+	uint32_t counter;		// counter in 0.1 L
+	uint16_t temperature;		// temp in 0.01 C
+
+	ElehantMeterAdvertismentB0() :
+		tariff_idx(0),
+		seq(0),
+		device_num(0),
+		counter(0),
+		temperature(0) {}
 
 	bool parse(BLEAdvertisedDevice &dev)
 	{
@@ -48,10 +55,10 @@ public:
 
 		// -- validate that this package can be parsed --
 		if (
-				memcmp(esp_addr, "\xb0\x01\x02", 3) != 0 &&
-				memcmp(esp_addr, "\xb0\x02\x02", 3) != 0 &&
-				memcmp(esp_addr, "\xb0\x03\x02", 3) != 0 &&
-				memcmp(esp_addr, "\xb0\x04\x02", 3) != 0)
+			memcmp(esp_addr, "\xb0\x01\x02", 3) != 0 &&
+			memcmp(esp_addr, "\xb0\x02\x02", 3) != 0 &&
+			memcmp(esp_addr, "\xb0\x03\x02", 3) != 0 &&
+			memcmp(esp_addr, "\xb0\x04\x02", 3) != 0)
 			return false;
 
 		if (!dev.haveManufacturerData())
@@ -82,7 +89,48 @@ public:
 	}
 };
 
-class MyAdvertisedDeviceCallbacls:
+class ElehantGasMeterAdvertismentB0 : public ElehantMeterAdvertismentB0 {
+public:
+	static constexpr auto MESSAGE_TYPE = "Elehant SGBD-4 B0";
+
+	bool parse(BLEAdvertisedDevice &dev)
+	{
+		auto addr = dev.getAddress();
+		auto esp_addr = addr.getNative();
+
+		// NOTE: See docs/protocol.md
+
+		// -- validate that this package can be parsed --
+		if (
+			memcmp(esp_addr, "\xb0\x10\x01", 3) != 0 &&
+			memcmp(esp_addr, "\xb0\x11\x01", 3) != 0 &&
+			memcmp(esp_addr, "\xb0\x12\x01", 3) != 0 &&
+			memcmp(esp_addr, "\xb0\x32\x01", 3) != 0)
+			return false;
+
+		if (!dev.haveManufacturerData())
+			return false;
+
+		auto mfg_data = dev.getManufacturerData();
+
+		if (mfg_data.length() != 19)
+			return false;
+
+		if (memcmp(&mfg_data.front(), "\xff\xff\x80", 3) != 0)
+			return false;
+
+
+		// -- parse --
+		seq = mfg_data.at(3);
+		memcpy(&device_num, &mfg_data.at(8), 3);	device_num &= 0x00ffffff;
+		memcpy(&counter, &mfg_data.at(11), 4);
+		memcpy(&temperature, &mfg_data.at(16), 2);
+
+		return true;
+	}
+}
+
+class MyAdvertisedDeviceCallbacls :
 	public BLEAdvertisedDeviceCallbacks
 {
 	void onResult(BLEAdvertisedDevice dev) override
@@ -104,6 +152,12 @@ class MyAdvertisedDeviceCallbacls:
 		if (elehant_data.parse(dev)) {
 			send_elehant_counter(now, ts, dev, elehant_data);
 		}
+		else {
+			ElehantGasMeterAdvertismentB0 gas_data;
+			if (gas_data.parse(dev)) {
+				send_elehant_counter(now, ts, dev, gas_data);
+			}
+		}
 	}
 
 	void send_raw(uint32_t now, unsigned long ts, BLEAdvertisedDevice &dev)
@@ -120,41 +174,41 @@ class MyAdvertisedDeviceCallbacls:
 		jdev["bdaddr"] = dev.getAddress().toString();
 		jdev["addr_type"] = int(addr_type);
 
-		/*[[[cog:
-		for key, getter in [
-		    ("name", "Name", ),
-		    ("rssi", "RSSI", ),
-		    ("appearance", "Appearance", ),
-		    ("tx_power", "TXPower", ),
-		    ]:
-		    cog.outl(f"""\
-		if (dev.have{getter}())
-			jdev["{key}"] = dev.get{getter}();
-		else
-			jdev["{key}"] = nullptr;
-		""")
-		]]]*/
+		// [[[cog:
+		// for key, getter in [
+		//     ("name", "Name", ),
+		//     ("rssi", "RSSI", ),
+		//     ("appearance", "Appearance", ),
+		//     ("tx_power", "TXPower", ),
+		//     ]:
+		//     cog.outl(f"""\
+		// if (dev.have{getter}())
+		//         jdev["{key}"] = dev.get{getter}();
+		// else
+		//         jdev["{key}"] = nullptr;
+		// """)
+		// ]]]
 		if (dev.haveName())
-			jdev["name"] = dev.getName();
+		        jdev["name"] = dev.getName();
 		else
-			jdev["name"] = nullptr;
+		        jdev["name"] = nullptr;
 
 		if (dev.haveRSSI())
-			jdev["rssi"] = dev.getRSSI();
+		        jdev["rssi"] = dev.getRSSI();
 		else
-			jdev["rssi"] = nullptr;
+		        jdev["rssi"] = nullptr;
 
 		if (dev.haveAppearance())
-			jdev["appearance"] = dev.getAppearance();
+		        jdev["appearance"] = dev.getAppearance();
 		else
-			jdev["appearance"] = nullptr;
+		        jdev["appearance"] = nullptr;
 
 		if (dev.haveTXPower())
-			jdev["tx_power"] = dev.getTXPower();
+		        jdev["tx_power"] = dev.getTXPower();
 		else
-			jdev["tx_power"] = nullptr;
+		        jdev["tx_power"] = nullptr;
 
-		//[[[end]]] (checksum: 5282096a1e1a621e5ea8d29ed06de368)
+		//[[[end]]] (checksum: 1afcd59e804d529e0471a87e9723be8d)
 
 		if (dev.haveManufacturerData()) {
 			auto data = dev.getManufacturerData();
