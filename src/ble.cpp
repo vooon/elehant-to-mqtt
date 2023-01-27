@@ -128,7 +128,7 @@ public:
 
 		return true;
 	}
-}
+};
 
 class MyAdvertisedDeviceCallbacls :
 	public BLEAdvertisedDeviceCallbacks
