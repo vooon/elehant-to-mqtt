@@ -75,7 +75,8 @@ if 1:
         tf = f.with_suffix('.xbm')
         #tf = pathlib.Path(tempfile.mktemp(suffix='.xbm'))
 
-        subprocess.check_output(['convert', str(f), str(tf)])
+        if not tf.exists():
+            subprocess.check_output(['convert', str(f), str(tf)])
 
         with tf.open('r') as fd:
             xbm = fd.read()
