@@ -29,9 +29,8 @@ static inline std::string to_hex(const std::string &str)
 	return ret;
 }
 
-class ElehantMeterAdvertismentB0 {
+class ElehanDataB0 {
 public:
-	static constexpr auto MESSAGE_TYPE = "Elehant SVD-15 B0";
 
 	uint8_t tariff_idx;		// SVT-15 have two measurements
 	uint8_t seq;			// sequence number
@@ -39,14 +38,27 @@ public:
 	uint32_t counter;		// counter in 0.1 L
 	uint16_t temperature;		// temp in 0.01 C
 
-	ElehantMeterAdvertismentB0() :
+	ElehanDataB0() :
 		tariff_idx(0),
 		seq(0),
 		device_num(0),
 		counter(0),
 		temperature(0) {}
 
-	bool parse(BLEAdvertisedDevice &dev)
+	virtual std::string message_type();
+	virtual bool parse(BLEAdvertisedDevice &dev);
+};
+
+class ElehantWaterMeterAdvertismentB0 : public ElehanDataB0 {
+public:
+	static constexpr auto MESSAGE_TYPE = "Elehant SVD-15 B0";
+
+	std::string message_type() override
+	{
+		return MESSAGE_TYPE;
+	}
+
+	bool parse(BLEAdvertisedDevice &dev) override
 	{
 		auto addr = dev.getAddress();
 		auto esp_addr = addr.getNative();
@@ -89,11 +101,16 @@ public:
 	}
 };
 
-class ElehantGasMeterAdvertismentB0 : public ElehantMeterAdvertismentB0 {
+class ElehantGasMeterAdvertismentB0 : public ElehanDataB0 {
 public:
 	static constexpr auto MESSAGE_TYPE = "Elehant SGBD-4 B0";
 
-	bool parse(BLEAdvertisedDevice &dev)
+	std::string message_type() override
+	{
+		return MESSAGE_TYPE;
+	}
+
+	bool parse(BLEAdvertisedDevice &dev) override
 	{
 		auto addr = dev.getAddress();
 		auto esp_addr = addr.getNative();
@@ -148,9 +165,9 @@ class MyAdvertisedDeviceCallbacls :
 			send_raw(now, ts, dev);
 		}
 
-		ElehantMeterAdvertismentB0 elehant_data;
+		ElehantWaterMeterAdvertismentB0 water_data;
 		if (elehant_data.parse(dev)) {
-			send_elehant_counter(now, ts, dev, elehant_data);
+			send_elehant_counter(now, ts, dev, water_data);
 		}
 		else {
 			ElehantGasMeterAdvertismentB0 gas_data;
@@ -224,7 +241,7 @@ class MyAdvertisedDeviceCallbacls :
 		mqtt::ble_report_raw_adv(jdoc);
 	}
 
-	void send_elehant_counter(uint32_t now, unsigned long ts, BLEAdvertisedDevice &dev, ElehantMeterAdvertismentB0 &edata)
+	void send_elehant_counter(uint32_t now, unsigned long ts, BLEAdvertisedDevice &dev, ElehanDataB0 &edata)
 	{
 		jdoc.clear();
 		auto root = jdoc.to<JsonObject>();
@@ -236,7 +253,7 @@ class MyAdvertisedDeviceCallbacls :
 		jdev["bdaddr"] = dev.getAddress().toString();
 		jdev["device_num"] = edata.device_num;
 		jdev["rssi"] = dev.getRSSI();
-		jdev["message_type"] = edata.MESSAGE_TYPE;
+		jdev["message_type"] = edata.message_type();
 
 		auto cntr = root.createNestedObject("counter");
 		cntr["m3"] = edata.counter * 0.0001;
