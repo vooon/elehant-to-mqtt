@@ -166,7 +166,7 @@ class MyAdvertisedDeviceCallbacls :
 		}
 
 		ElehantWaterMeterAdvertismentB0 water_data;
-		if (elehant_data.parse(dev)) {
+		if (water_data.parse(dev)) {
 			send_elehant_counter(now, ts, dev, water_data);
 		}
 		else {
