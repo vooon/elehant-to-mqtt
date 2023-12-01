@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import os
 import pathlib
 import re
 import subprocess
@@ -23,9 +24,12 @@ parser.add_argument("-D", "--define", action="append")
 args = parser.parse_args()
 
 
-git_desc = (
-    subprocess.check_output(["git", "describe", "--dirty"]).decode("utf-8").strip()
-)
+if os.getenv("CI"):
+    git_desc = os.getenv("GITHUB_REF")
+else:
+    git_desc = (
+        subprocess.check_output(["git", "describe", "--dirty"]).decode("utf-8").strip()
+    )
 
 
 VER_TPL = """
@@ -86,7 +90,7 @@ if 1:
                 "#define ", "#define icon_"
             )
 
-        tf.unlink()
+        # tf.unlink()
 
     with open("./src/icons_xbm.h", "a+") as fd:
         replace_content(fd, xbm_content)
