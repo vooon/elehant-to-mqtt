@@ -122,7 +122,10 @@ public:
 			memcmp(esp_addr, "\xb0\x10\x01", 3) != 0 &&
 			memcmp(esp_addr, "\xb0\x11\x01", 3) != 0 &&
 			memcmp(esp_addr, "\xb0\x12\x01", 3) != 0 &&
-			memcmp(esp_addr, "\xb0\x32\x01", 3) != 0)
+			memcmp(esp_addr, "\xb0\x30\x01", 3) != 0 &&
+			memcmp(esp_addr, "\xb0\x31\x01", 3) != 0 &&
+			memcmp(esp_addr, "\xb0\x32\x01", 3) != 0 &&
+			memcmp(esp_addr, "\xb0\x22\x01", 3) != 0)
 			return false;
 
 		if (!dev.haveManufacturerData())
